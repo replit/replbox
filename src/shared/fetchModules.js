@@ -1,4 +1,4 @@
-const fetch = require('isomorphic-fetch');
+const fetch = require("whatwg-fetch");
 
 const _cache = Object.create(null);
 

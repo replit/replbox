@@ -23,11 +23,14 @@
     "context-eval": "^0.1.0",
     "happypack": "^4.0.1",
     "inspect-x": "1.7.0",
+    "jasmine-core": "^2.4.1",
+    "jasmine_dom_matchers": "^1.4.0",
     "puppeteer": "^1.11.0",
     "script-loader": "0.7.0",
     "stuff.js": "^0.4.1",
     "underscore": "1.2.2",
     "underscore.string": "2.0.0",
-    "webpack": "3.10"
+    "webpack": "3.10",
+    "whatwg-fetch": "^3.0.0"
   }
 }

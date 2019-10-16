@@ -4,7 +4,7 @@
 const Promise = require("bluebird");
 const { EventEmitter } = require("events");
 // const Languages = require('@replit/languages');
-const fetch = require("isomorphic-fetch");
+const fetch = require("whatwg-fetch");
 // const { track } = require('@replit/tracking/client');
 
 const stuff = require("stuff.js");
