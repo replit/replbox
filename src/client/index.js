@@ -1,7 +1,6 @@
 // Warning: this is shared with the Embed app. Don't pull in too
 // many dependencies.
 
-const Promise = require("bluebird");
 const { EventEmitter } = require("events");
 // const Languages = require('@replit/languages');
 const fetch = require("whatwg-fetch");
