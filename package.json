@@ -1,0 +1,31 @@
+{
+  "name": "@replit/replbox",
+  "version": "1.0.0",
+  "description": "A sandboxed browser REPL",
+  "main": "src/client/index.js",
+  "scripts": {
+    "build": "NODE_ENV=production webpack --config ./webpack.config.js --bail"
+  },
+  "author": "amjad@repl.it",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@replit/sentry-browser": "^1.0.0",
+    "apl": "git+https://github.com/ngn/apl.git#cc314fe3be5f2d018d556b7e91916711e46d265e",
+    "babel-generator": "6.26.0",
+    "babel-loader": "7.1.2",
+    "babel-polyfill": "6.26.0",
+    "babel-template": "6.26.0",
+    "babel-traverse": "6.26.0",
+    "babylon": "6.18.0",
+    "biwascheme": "git+https://github.com/masad-frost/biwascheme.git#3c0d5a67cd1af696c69ab7fb085b2f42c8b0586c",
+    "context-eval": "^0.1.0",
+    "happypack": "^4.0.1",
+    "inspect-x": "1.7.0",
+    "puppeteer": "^1.11.0",
+    "script-loader": "0.7.0",
+    "stuff.js": "^0.4.1",
+    "underscore": "1.2.2",
+    "underscore.string": "2.0.0",
+    "webpack": "3.10"
+  }
+}
