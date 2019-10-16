@@ -15,13 +15,6 @@ if (
 }
 
 const prod = process.env.NODE_ENV === "production";
-const bundleNamesFile = path.join(__dirname, ".webpack_bundle_names.json");
-const bundleNames = fs.existsSync(bundleNamesFile)
-  ? JSON.parse(fs.readFileSync(bundleNamesFile))
-  : {};
-process.on("exit", () => {
-  fs.writeFileSync(bundleNamesFile, JSON.stringify(bundleNames));
-});
 
 function createConfig(name, entryPath) {
   const plugins = [
@@ -29,25 +22,12 @@ function createConfig(name, entryPath) {
       this.plugin("done", stats => {
         // For some reason happypack + --bail doesn't produce the correct exit code
         // when uglify fails. This makes sure it happens.
-        if (
-          prod &&
-          stats.compilation.errors &&
-          stats.compilation.errors.length
-        ) {
+        if (stats.compilation.errors && stats.compilation.errors.length) {
           console.error(stats.compilation.errors.join("\n"));
           process.on("beforeExit", () => {
             process.exit(1);
           });
         }
-
-        if (!stats.toJson().assetsByChunkName.main) {
-          console.error("Error getting main chunk for", name, entryPath);
-          console.error(stats.toJson().errors.join("\n"));
-          process.exit(1);
-        }
-
-        const fileName = stats.toJson().assetsByChunkName.main[0];
-        bundleNames[name] = fileName;
       });
     },
     new webpack.DefinePlugin({
@@ -137,6 +117,12 @@ function createConfig(name, entryPath) {
 
 const configs = [];
 
+// replbox bundle
+configs.push(
+  createConfig("client", path.resolve(__dirname, "src", "client", "index.js"))
+);
+
+// language bundles
 const langs = fs.readdirSync(path.resolve(__dirname, "src", "languages"));
 for (const lang of langs) {
   const dir = path.resolve(__dirname, "src", "languages", lang);
