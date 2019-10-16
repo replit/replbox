@@ -9,8 +9,6 @@ const fetch = require("whatwg-fetch");
 
 const stuff = require("stuff.js");
 
-
-
 const createStuff = (el, origin) =>
   new Promise(resolve => {
     stuff(origin, { el }, context => {
@@ -29,101 +27,101 @@ class ReplBox extends EventEmitter {
     this._loadLibraryPromises = {};
   }
 
-  load(stuffOrigin) {
-    return fetchLangSrc(this._language).then(
-      langSrc =>
-        new Promise((resolve, reject) => {
-          if (this._useIframe) {
-            this._el = document.createElement("div");
-            if (!this._iframeParent) {
-              // We don't care to display the iframe.
-              this._el.style.display = "none";
-              document.body.appendChild(this._el);
-            } else {
-              // Adapt to parent width and height.
-              this._el.style.height = "100%";
-              this._el.style.width = "100%";
-              this._iframeParent.appendChild(this._el);
-            }
+  load(iframeOrigin, languageBundleSrc) {
+    return new Promise((resolve, reject) => {
+      if (this._useIframe) {
+        this._el = document.createElement("div");
+        if (!this._iframeParent) {
+          // We don't care to display the iframe.
+          this._el.style.display = "none";
+          document.body.appendChild(this._el);
+        } else {
+          // Adapt to parent width and height.
+          this._el.style.height = "100%";
+          this._el.style.width = "100%";
+          this._iframeParent.appendChild(this._el);
+        }
 
-            createStuff(this._el, stuffOrigin)
-              .then(context => {
-                this._stuffContext = context;
-                context.on("result", data => {
-                  this._resolve(data);
-                });
-                context.on("ready", () => resolve());
-                context.on("warn", msg => this.emit("warn", msg));
-                context.on("checkLine", msg => this.checkLineCb(msg));
-                context.on("output", msg => this._stdout(msg));
-                context.on("stderr", msg => this._stderr(msg));
-                context.on("resetReady", () => this._resetReady());
-                context.on("loadedLibrary", name =>
-                  this._loadLibraryPromises[name].resolve()
-                );
-                context.on("loadFailedLibrary", (name, msg) =>
-                  this._loadLibraryPromises[name].reject(msg)
-                );
-                context.on("track", ({ eventName, props }) =>
-                  // TODO  
-                  // track(eventName, props)
-                );
-                context.on("error", msg => this._reject(new Error(msg)));
-                context.on("input", () => this.emit("input"));
-                context.on("clearConsole", () => this.emit("clearConsole"));
+        createStuff(this._el, iframeOrigin)
+          .then(context => {
+            this._stuffContext = context;
+            context.on("result", data => {
+              this._resolve(data);
+            });
+            context.on("ready", () => resolve());
+            context.on("warn", msg => this.emit("warn", msg));
+            context.on("checkLine", msg => this.checkLineCb(msg));
+            context.on("output", msg => this._stdout(msg));
+            context.on("stderr", msg => this._stderr(msg));
+            context.on("resetReady", () => this._resetReady());
+            context.on("loadedLibrary", name =>
+              this._loadLibraryPromises[name].resolve()
+            );
+            context.on("loadFailedLibrary", (name, msg) =>
+              this._loadLibraryPromises[name].reject(msg)
+            );
+            context.on(
+              "track",
+              ({ eventName, props }) => {}
+              // TODO
+              // track(eventName, props)
+            );
+            context.on("error", msg => this._reject(new Error(msg)));
+            context.on("input", () => this.emit("input"));
+            context.on("clearConsole", () => this.emit("clearConsole"));
 
-                context.load(`<script src=${langSrc}></script>`);
-              })
-              .done();
-          } else {
-            this._worker = new Worker(langSrc);
-            this._worker.onerror = e => reject(e.data || "unknown error");
-            this._worker.onmessage = e => {
-              const message = e.data;
-              switch (message.type) {
-                case "result":
-                  this._resolve({
-                    data: message.data,
-                    error: message.error
-                  });
-                  break;
-                case "error":
-                  this._reject(new Error(message.data));
-                  break;
-                case "output":
-                  this._stdout(message.data);
-                  break;
-                case "stderr":
-                  this._stderr(message.data);
-                  break;
-                case "ready":
-                  resolve();
-                  break;
-                case "warn":
-                  this.emit("warn", message.data);
-                  break;
-                case "checkLine":
-                  this.checkLineCb(message.data);
-                  break;
-                case "resetReady":
-                  this._resetReady();
-                  break;
-                case "track":
-                  track(message.data.eventName, message.data.props);
-                  break;
-                case "input":
-                  this.emit("input");
-                  break;
-                case "clearConsole":
-                  this.emit("clearConsole");
-                  break;
-                default:
-                  throw new Error(`Unkown message type: ${message.type}`);
-              }
-            };
+            context.load(`<script src=${languageBundleSrc}></script>`);
+          })
+          .done();
+      } else {
+        this._worker = new Worker(languageBundleSrc);
+        this._worker.onerror = e => reject(e.data || "unknown error");
+        this._worker.onmessage = e => {
+          const message = e.data;
+          switch (message.type) {
+            case "result":
+              this._resolve({
+                data: message.data,
+                error: message.error
+              });
+              break;
+            case "error":
+              this._reject(new Error(message.data));
+              break;
+            case "output":
+              this._stdout(message.data);
+              break;
+            case "stderr":
+              this._stderr(message.data);
+              break;
+            case "ready":
+              resolve();
+              break;
+            case "warn":
+              this.emit("warn", message.data);
+              break;
+            case "checkLine":
+              this.checkLineCb(message.data);
+              break;
+            case "resetReady":
+              this._resetReady();
+              break;
+            case "track":
+              // TODO
+              // track(message.data.eventName, message.data.props);
+              break;
+            case "input":
+              this.emit("input");
+              break;
+            case "clearConsole":
+              this.emit("clearConsole");
+              break;
+            default:
+              throw new Error(`Unkown message type: ${message.type}`);
           }
-        })
-    );
+        };
+      }
+    });
   }
 
   runProject(files, { stdout, stderr, infiniteLoopProtection, replId, url }) {
@@ -310,21 +308,6 @@ class ReplBox extends EventEmitter {
 
     this._stuffContext.emit("refresh");
   }
-}
-
-const langSrcs = Object.create(null);
-function fetchLangSrc(lang) {
-  if (langSrcs[lang]) {
-    return Promise.resolve(langSrcs[lang]);
-  }
-
-  return fetch(`/data/replbox_src/${lang}`)
-    .then(r => r.text())
-    .then(src => {
-      const source = `${window.location.origin}/public/${src}`;
-      langSrcs[lang] = source;
-      return source;
-    });
 }
 
 module.exports = ReplBox;
