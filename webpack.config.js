@@ -23,16 +23,6 @@ process.on("exit", () => {
   fs.writeFileSync(bundleNamesFile, JSON.stringify(bundleNames));
 });
 
-let version = "dontcry";
-if (prod) {
-  if (!process.env.SOURCE_VERSION) {
-    console.error("Missing heroku release version");
-    process.exit(1);
-  }
-
-  version = process.env.SOURCE_VERSION.slice(0, 7);
-}
-
 function createConfig(name, entryPath) {
   const plugins = [
     function() {
@@ -63,9 +53,9 @@ function createConfig(name, entryPath) {
     new webpack.DefinePlugin({
       "process.env": {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-        BROWSER: JSON.stringify(true),
-        VERSION: JSON.stringify(version),
+        // TODO
         SENTRY_DSN: JSON.stringify(process.env.SENTRY_DSN),
+        // TODO
         STAGING: JSON.stringify(process.env.STAGING)
       }
     })
@@ -115,8 +105,8 @@ function createConfig(name, entryPath) {
     },
     entry: entryPath,
     output: {
-      path: path.resolve(__dirname, "..", "..", "public"),
-      filename: prod ? name + ".[chunkhash].bundle.js" : name + ".bundle.js",
+      path: path.resolve(__dirname, "dist"),
+      filename: name + ".bundle.js",
       chunkFilename: prod
         ? name + ".[chunkhash].[id].chunk.js"
         : name + ".[id].chunk.js",
