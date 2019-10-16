@@ -9,12 +9,7 @@ const fetch = require("whatwg-fetch");
 
 const stuff = require("stuff.js");
 
-// Use a domain that is not the current domain so that x-domain rules
-// apply. Only time we don't use the default origin is in HTML laguage (repl.co)
-const defaultOrigin =
-  process.env.NODE_ENV !== "production" || process.env.STAGING === "true"
-    ? "/public/secure/"
-    : "https://replbox.repl.it/public/secure/";
+
 
 const createStuff = (el, origin) =>
   new Promise(resolve => {
@@ -34,7 +29,7 @@ class ReplBox extends EventEmitter {
     this._loadLibraryPromises = {};
   }
 
-  load(stuffOrigin = defaultOrigin) {
+  load(stuffOrigin) {
     return fetchLangSrc(this._language).then(
       langSrc =>
         new Promise((resolve, reject) => {
