@@ -10,19 +10,28 @@ if (typeof window === "object" && window) {
 }
 
 const { EventEmitter } = require("events");
-const Sentry = require("@sentry/browser");
+// const Sentry = require("@sentry/browser");
 
-if (process.env.NODE_ENV !== "development") {
-  const sentryDSN =
-    process.env.SENTRY_DSN ||
-    "https://2880e392cac04be5a08725aae4b206cb@sentry.io/100372";
+// if (process.env.NODE_ENV !== "development") {
+//   const sentryDSN =
+//     process.env.SENTRY_DSN ||
+//     "https://2880e392cac04be5a08725aae4b206cb@sentry.io/100372";
 
-  Sentry.init({
-    dsn: sentryDSN,
-    release: process.env.VERSION,
-    environment: process.env.NODE_ENV
-  });
-}
+//   Sentry.init({
+//     dsn: sentryDSN,
+//     release: process.env.VERSION,
+//     environment: process.env.NODE_ENV
+//   });
+// }
+// TODO
+const Sentry = new Proxy(
+  {},
+  {
+    get() {
+      return () => {};
+    }
+  }
+);
 
 const Messenger = new EventEmitter();
 
