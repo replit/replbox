@@ -1,20 +1,20 @@
 // Warning: this is shared with the Embed app. Don't pull in too
 // many dependencies.
 
-const Promise = require('bluebird');
-const { EventEmitter } = require('events');
-const Languages = require('@replit/languages');
-const fetch = require('isomorphic-fetch');
-const { track } = require('@replit/tracking/client');
+const Promise = require("bluebird");
+const { EventEmitter } = require("events");
+// const Languages = require('@replit/languages');
+const fetch = require("isomorphic-fetch");
+// const { track } = require('@replit/tracking/client');
 
-const stuff = require('stuff.js');
+const stuff = require("stuff.js");
 
 // Use a domain that is not the current domain so that x-domain rules
 // apply. Only time we don't use the default origin is in HTML laguage (repl.co)
 const defaultOrigin =
-  process.env.NODE_ENV !== 'production' || process.env.STAGING === 'true'
-    ? '/public/secure/'
-    : 'https://replbox.repl.it/public/secure/';
+  process.env.NODE_ENV !== "production" || process.env.STAGING === "true"
+    ? "/public/secure/"
+    : "https://replbox.repl.it/public/secure/";
 
 const createStuff = (el, origin) =>
   new Promise(resolve => {
@@ -39,94 +39,95 @@ class ReplBox extends EventEmitter {
       langSrc =>
         new Promise((resolve, reject) => {
           if (this._useIframe) {
-            this._el = document.createElement('div');
+            this._el = document.createElement("div");
             if (!this._iframeParent) {
               // We don't care to display the iframe.
-              this._el.style.display = 'none';
+              this._el.style.display = "none";
               document.body.appendChild(this._el);
             } else {
               // Adapt to parent width and height.
-              this._el.style.height = '100%';
-              this._el.style.width = '100%';
+              this._el.style.height = "100%";
+              this._el.style.width = "100%";
               this._iframeParent.appendChild(this._el);
             }
 
             createStuff(this._el, stuffOrigin)
               .then(context => {
                 this._stuffContext = context;
-                context.on('result', data => {
+                context.on("result", data => {
                   this._resolve(data);
                 });
-                context.on('ready', () => resolve());
-                context.on('warn', msg => this.emit('warn', msg));
-                context.on('checkLine', msg => this.checkLineCb(msg));
-                context.on('output', msg => this._stdout(msg));
-                context.on('stderr', msg => this._stderr(msg));
-                context.on('resetReady', () => this._resetReady());
-                context.on('loadedLibrary', name =>
-                  this._loadLibraryPromises[name].resolve(),
+                context.on("ready", () => resolve());
+                context.on("warn", msg => this.emit("warn", msg));
+                context.on("checkLine", msg => this.checkLineCb(msg));
+                context.on("output", msg => this._stdout(msg));
+                context.on("stderr", msg => this._stderr(msg));
+                context.on("resetReady", () => this._resetReady());
+                context.on("loadedLibrary", name =>
+                  this._loadLibraryPromises[name].resolve()
                 );
-                context.on('loadFailedLibrary', (name, msg) =>
-                  this._loadLibraryPromises[name].reject(msg),
+                context.on("loadFailedLibrary", (name, msg) =>
+                  this._loadLibraryPromises[name].reject(msg)
                 );
-                context.on('track', ({ eventName, props }) =>
-                  track(eventName, props),
+                context.on("track", ({ eventName, props }) =>
+                  // TODO  
+                  // track(eventName, props)
                 );
-                context.on('error', msg => this._reject(new Error(msg)));
-                context.on('input', () => this.emit('input'));
-                context.on('clearConsole', () => this.emit('clearConsole'));
+                context.on("error", msg => this._reject(new Error(msg)));
+                context.on("input", () => this.emit("input"));
+                context.on("clearConsole", () => this.emit("clearConsole"));
 
                 context.load(`<script src=${langSrc}></script>`);
               })
               .done();
           } else {
             this._worker = new Worker(langSrc);
-            this._worker.onerror = e => reject(e.data || 'unknown error');
+            this._worker.onerror = e => reject(e.data || "unknown error");
             this._worker.onmessage = e => {
               const message = e.data;
               switch (message.type) {
-                case 'result':
+                case "result":
                   this._resolve({
                     data: message.data,
-                    error: message.error,
+                    error: message.error
                   });
                   break;
-                case 'error':
+                case "error":
                   this._reject(new Error(message.data));
                   break;
-                case 'output':
+                case "output":
                   this._stdout(message.data);
                   break;
-                case 'stderr':
+                case "stderr":
                   this._stderr(message.data);
                   break;
-                case 'ready':
+                case "ready":
                   resolve();
                   break;
-                case 'warn':
-                  this.emit('warn', message.data);
+                case "warn":
+                  this.emit("warn", message.data);
                   break;
-                case 'checkLine':
+                case "checkLine":
                   this.checkLineCb(message.data);
                   break;
-                case 'resetReady':
+                case "resetReady":
                   this._resetReady();
                   break;
-                case 'track':
+                case "track":
                   track(message.data.eventName, message.data.props);
                   break;
-                case 'input':
-                  this.emit('input');
+                case "input":
+                  this.emit("input");
                   break;
-                case 'clearConsole':
-                  this.emit('clearConsole');
+                case "clearConsole":
+                  this.emit("clearConsole");
                   break;
                 default:
                   throw new Error(`Unkown message type: ${message.type}`);
               }
             };
           }
-        }),
+        })
     );
   }
 
@@ -135,11 +136,11 @@ class ReplBox extends EventEmitter {
     this._stderr = stderr || function() {};
 
     return new Promise((resolve, reject) => {
-      this._stuffContext.emit('runProject', {
+      this._stuffContext.emit("runProject", {
         files,
         infiniteLoopProtection,
         replId,
-        url,
+        url
       });
       this._resolve = data => {
         resolve(data);
@@ -155,17 +156,17 @@ class ReplBox extends EventEmitter {
       this._reject = reject;
 
       if (this._useIframe) {
-        this._stuffContext.emit('evaluate', {
+        this._stuffContext.emit("evaluate", {
           code,
-          infiniteLoopProtection,
+          infiniteLoopProtection
         });
         this._resolve = data => {
           resolve(data);
         };
       } else {
         this._worker.postMessage({
-          type: 'evaluate',
-          data: code,
+          type: "evaluate",
+          data: code
         });
         this._resolve = data => {
           resolve(data);
@@ -194,11 +195,11 @@ class ReplBox extends EventEmitter {
 
   write(str) {
     if (this._useIframe) {
-      this._stuffContext.emit('write', str);
+      this._stuffContext.emit("write", str);
     } else {
       this._worker.postMessage({
-        type: 'write',
-        data: str,
+        type: "write",
+        data: str
       });
     }
   }
@@ -206,7 +207,7 @@ class ReplBox extends EventEmitter {
   _resetWeb() {
     return new Promise(resolve => {
       if (!this._useIframe) {
-        throw new Error('Not supported in worker mode');
+        throw new Error("Not supported in worker mode");
       }
 
       // If the context hasn't loaded or it was unloaded (say via a page transition)
@@ -226,14 +227,15 @@ class ReplBox extends EventEmitter {
         this._resetReady = null;
         resolve();
       };
-      this._stuffContext.emit('reset');
+      this._stuffContext.emit("reset");
     });
   }
 
   reset() {
-    if (Languages.get(this._language).category === 'Web') {
-      return this._resetWeb();
-    }
+    // TODO
+    // if (Languages.get(this._language).category === "Web") {
+    //   return this._resetWeb();
+    // }
 
     this.destroy();
     return this.load();
@@ -242,11 +244,11 @@ class ReplBox extends EventEmitter {
   checkLineEnd(command, callback) {
     this.checkLineCb = callback;
     if (this._useIframe) {
-      this._stuffContext.emit('checkLine', command);
+      this._stuffContext.emit("checkLine", command);
     } else {
       this._worker.postMessage({
-        type: 'checkLine',
-        data: command,
+        type: "checkLine",
+        data: command
       });
     }
   }
@@ -259,15 +261,15 @@ class ReplBox extends EventEmitter {
       this._reject = reject;
 
       if (this._useIframe) {
-        this._stuffContext.emit('runSingleUnitTests', {
+        this._stuffContext.emit("runSingleUnitTests", {
           code,
           suiteCode,
-          infiniteLoopProtection,
+          infiniteLoopProtection
         });
       } else {
         this._worker.postMessage({
-          type: 'runSingleUnitTests',
-          data: { code, suiteCode, infiniteLoopProtection },
+          type: "runSingleUnitTests",
+          data: { code, suiteCode, infiniteLoopProtection }
         });
       }
     });
@@ -279,10 +281,10 @@ class ReplBox extends EventEmitter {
       this._stderr = console.error.bind(console); // eslint-disable-line
       this._resolve = resolve;
       this._reject = reject;
-      this._stuffContext.emit('runUnitTests', {
+      this._stuffContext.emit("runUnitTests", {
         files,
         suiteCode,
-        infiniteLoopProtection,
+        infiniteLoopProtection
       });
     });
   }
@@ -291,7 +293,7 @@ class ReplBox extends EventEmitter {
   // as opposed to a UI prompt.
   overridePrompt() {
     if (this._useIframe) {
-      this._stuffContext.emit('overridePrompt');
+      this._stuffContext.emit("overridePrompt");
       return true;
     }
     return false;
@@ -300,18 +302,18 @@ class ReplBox extends EventEmitter {
   loadLibrary(name) {
     return new Promise((resolve, reject) => {
       if (this._useIframe) {
-        this._stuffContext.emit('loadLibrary', name);
+        this._stuffContext.emit("loadLibrary", name);
         this._loadLibraryPromises[name] = { resolve, reject };
       }
     });
   }
 
   refreshWebProject() {
-    if (this._language !== 'web_project' && this._language !== 'html') {
-      throw new Error('Only web_project accepts refresh message');
+    if (this._language !== "web_project" && this._language !== "html") {
+      throw new Error("Only web_project accepts refresh message");
     }
 
-    this._stuffContext.emit('refresh');
+    this._stuffContext.emit("refresh");
   }
 }
 

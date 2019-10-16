@@ -1,17 +1,17 @@
-const Messenger = require('./messenger');
-const transform = require('./transforms');
-const { events } = require('@replit/tracking/client');
-const fetchModules = require('./fetchModules');
-const { inspect } = require('./util');
-const stackTracer = require('./stackTracer');
+const Messenger = require("./messenger");
+const transform = require("./transforms");
+// const { events } = require('@replit/tracking/client');
+const fetchModules = require("./fetchModules");
+const { inspect } = require("./util");
+const stackTracer = require("./stackTracer");
 
 function warnOnInfinite(e) {
   if (
-    e.name === 'RangeError' &&
-    typeof e.message === 'string' &&
+    e.name === "RangeError" &&
+    typeof e.message === "string" &&
     e.message.match(/infinite/i)
   ) {
-    Messenger.warn('infinite');
+    Messenger.warn("infinite");
   }
 }
 
@@ -24,13 +24,13 @@ module.exports = (code, { context, infiniteLoopProtection }) =>
       const res = transform(processedCode, {
         jsLoopBreaker: infiniteLoopProtection,
         blockBinding: true,
-        checkImports: true,
+        checkImports: true
       });
 
       imports = res.imports;
       processedCode = res.code;
     } catch (e) {
-      if (e.name === 'SyntaxError') {
+      if (e.name === "SyntaxError") {
         let message = e.message;
 
         // Some browser don't include the name in the message prop.
@@ -39,7 +39,7 @@ module.exports = (code, { context, infiniteLoopProtection }) =>
         }
 
         resolve({
-          error: message,
+          error: message
         });
         return;
       }
@@ -53,9 +53,10 @@ module.exports = (code, { context, infiniteLoopProtection }) =>
     let result;
 
     if (imports.length) {
-      Messenger.track(events.MODULES_FETCHED, {
-        language: 'javascript',
-      });
+      // TODO
+      // Messenger.track(events.MODULES_FETCHED, {
+      //   language: 'javascript',
+      // });
 
       fetchModules(imports).then(
         bundle => {
@@ -65,7 +66,7 @@ module.exports = (code, { context, infiniteLoopProtection }) =>
             warnOnInfinite(e);
 
             resolve({
-              error: stackTracer(e, { isIframe: Messenger.isIframe }),
+              error: stackTracer(e, { isIframe: Messenger.isIframe })
             });
 
             return;
@@ -77,7 +78,7 @@ module.exports = (code, { context, infiniteLoopProtection }) =>
             warnOnInfinite(e);
 
             resolve({
-              error: stackTracer(e, { isIframe: Messenger.isIframe }),
+              error: stackTracer(e, { isIframe: Messenger.isIframe })
             });
 
             return;
@@ -86,16 +87,16 @@ module.exports = (code, { context, infiniteLoopProtection }) =>
           resolve({ data: inspect(result) });
         },
         err => {
-          Messenger.warn('import-failure');
+          Messenger.warn("import-failure");
           resolve({ error: err.stack });
-        },
+        }
       );
     } else {
       try {
         result = context.evaluate(processedCode);
       } catch (e) {
         resolve({
-          error: stackTracer(e, { isIframe: Messenger.isIframe }),
+          error: stackTracer(e, { isIframe: Messenger.isIframe })
         });
         return;
       }

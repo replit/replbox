@@ -9,7 +9,6 @@
   "author": "amjad@repl.it",
   "license": "UNLICENSED",
   "dependencies": {
-    "@replit/sentry-browser": "^1.0.0",
     "apl": "git+https://github.com/ngn/apl.git#cc314fe3be5f2d018d556b7e91916711e46d265e",
     "babel-generator": "6.26.0",
     "babel-loader": "7.1.2",

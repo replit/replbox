@@ -1,25 +1,26 @@
-require('@replit/sentry-browser');
+// TODO
+// require('@replit/sentry-browser');
 
-require('babel-polyfill/browser');
+require("babel-polyfill/browser");
 
 // Loading multiple polyfills fails. Some of our language
 // dependencies tries to load their own, e.g. babel so we let them.
-if (typeof window === 'object' && window) {
+if (typeof window === "object" && window) {
   delete window._babelPolyfill;
 }
 
-const { EventEmitter } = require('events');
-const Sentry = require('@sentry/browser');
+const { EventEmitter } = require("events");
+const Sentry = require("@sentry/browser");
 
-if (process.env.NODE_ENV !== 'development') {
+if (process.env.NODE_ENV !== "development") {
   const sentryDSN =
     process.env.SENTRY_DSN ||
-    'https://2880e392cac04be5a08725aae4b206cb@sentry.io/100372';
+    "https://2880e392cac04be5a08725aae4b206cb@sentry.io/100372";
 
   Sentry.init({
     dsn: sentryDSN,
     release: process.env.VERSION,
-    environment: process.env.NODE_ENV,
+    environment: process.env.NODE_ENV
   });
 }
 
@@ -29,140 +30,140 @@ function messengerEmit(event, data) {
   Sentry.addBreadcrumb({
     message: event,
     data,
-    category: 'replbox',
+    category: "replbox"
   });
 
   return Messenger.emit(event, data);
 }
 
 let iframe = false;
-if (typeof window === 'object' && window && window.parent) {
+if (typeof window === "object" && window && window.parent) {
   iframe = true;
   Messenger.global = window;
-  window.parent.stuffOn('evaluate', options => {
-    messengerEmit('evaluate', options);
+  window.parent.stuffOn("evaluate", options => {
+    messengerEmit("evaluate", options);
 
     Sentry.addBreadcrumb({
-      message: 'evaluate',
+      message: "evaluate",
       data: options,
-      category: 'replbox',
+      category: "replbox"
     });
   });
 
-  window.parent.stuffOn('runProject', options => {
-    messengerEmit('runProject', options);
+  window.parent.stuffOn("runProject", options => {
+    messengerEmit("runProject", options);
 
     Sentry.addBreadcrumb({
-      message: 'runProject',
+      message: "runProject",
       data: options,
-      category: 'replbox',
+      category: "replbox"
     });
   });
 
-  window.parent.stuffOn('write', str => {
-    messengerEmit('write', str);
+  window.parent.stuffOn("write", str => {
+    messengerEmit("write", str);
   });
 
-  window.parent.stuffOn('checkLine', command => {
-    if (!Messenger.listeners('checkLine').length) {
+  window.parent.stuffOn("checkLine", command => {
+    if (!Messenger.listeners("checkLine").length) {
       // No one bothered to listen on this event, just say no.
       Messenger.checkLineEnd(false);
     } else {
-      messengerEmit('checkLine', command);
+      messengerEmit("checkLine", command);
     }
   });
 
   window.parent.stuffOn(
-    'runSingleUnitTests',
+    "runSingleUnitTests",
     ({ code, url, suiteCode, infiniteLoopProtection }) => {
-      messengerEmit('runSingleUnitTests', {
+      messengerEmit("runSingleUnitTests", {
         code,
         url,
         suiteCode,
-        infiniteLoopProtection,
+        infiniteLoopProtection
       });
 
       Sentry.addBreadcrumb({
-        message: 'runSingleUnitTests',
+        message: "runSingleUnitTests",
         data: { code, url, suiteCode, infiniteLoopProtection },
-        category: 'replbox',
+        category: "replbox"
       });
-    },
+    }
   );
 
   window.parent.stuffOn(
-    'runUnitTests',
+    "runUnitTests",
     ({ files, suiteCode, infiniteLoopProtection }) => {
-      messengerEmit('runUnitTests', {
+      messengerEmit("runUnitTests", {
         files,
         suiteCode,
-        infiniteLoopProtection,
+        infiniteLoopProtection
       });
 
       Sentry.addBreadcrumb({
-        message: 'runUnitTests',
+        message: "runUnitTests",
         data: { files, suiteCode, infiniteLoopProtection },
-        category: 'replbox',
+        category: "replbox"
       });
-    },
+    }
   );
 
-  window.parent.stuffOn('reset', () => {
-    messengerEmit('reset');
+  window.parent.stuffOn("reset", () => {
+    messengerEmit("reset");
 
     Sentry.addBreadcrumb({
-      message: 'reset',
-      category: 'replbox',
+      message: "reset",
+      category: "replbox"
     });
   });
 
-  window.parent.stuffOn('refresh', () => {
-    messengerEmit('refresh');
+  window.parent.stuffOn("refresh", () => {
+    messengerEmit("refresh");
 
     Sentry.addBreadcrumb({
-      message: 'refresh',
-      category: 'replbox',
+      message: "refresh",
+      category: "replbox"
     });
   });
 
-  window.parent.stuffOn('overridePrompt', () => {
-    messengerEmit('overridePrompt');
+  window.parent.stuffOn("overridePrompt", () => {
+    messengerEmit("overridePrompt");
   });
 
-  window.parent.stuffOn('loadLibrary', name => {
-    Messenger.emit('loadLibrary', name);
+  window.parent.stuffOn("loadLibrary", name => {
+    Messenger.emit("loadLibrary", name);
   });
 } else {
   Messenger.global = self;
   // Some scripts reference window directly.
   Messenger.global.window = self;
-  self.addEventListener('message', e => {
+  self.addEventListener("message", e => {
     if (!e.data) {
       return;
     }
 
     // Note that runProject is not implemented here.
     switch (e.data.type) {
-      case 'evaluate':
+      case "evaluate":
         messengerEmit(e.data.type, {
-          code: e.data.data,
+          code: e.data.data
         });
         break;
-      case 'write':
-      case 'runSingleUnitTests':
-      case 'runUnitTests':
+      case "write":
+      case "runSingleUnitTests":
+      case "runUnitTests":
         messengerEmit(e.data.type, e.data.data);
         break;
-      case 'checkLine':
-        if (!Messenger.listeners('checkLine').length) {
+      case "checkLine":
+        if (!Messenger.listeners("checkLine").length) {
           // No one bothered to listen on this event, just say no.
           Messenger.checkLineEnd(false);
         } else {
-          messengerEmit('checkLine', e.data.data);
+          messengerEmit("checkLine", e.data.data);
         }
         break;
-      case 'reset':
-        messengerEmit('reset');
+      case "reset":
+        messengerEmit("reset");
         break;
       default:
         throw new Error(`Unkown message type: ${e.data.type}`);
@@ -174,7 +175,7 @@ if (typeof window === 'object' && window && window.parent) {
 // So that we don't hold back the output from long running
 // sync programs. And that we don't hold back forever on
 // things that we can flush asnyncly.
-let buffer = '';
+let buffer = "";
 let bufferTime;
 let timer;
 
@@ -183,14 +184,14 @@ function flush() {
   clearTimeout(timer);
   timer = null;
   if (iframe) {
-    window.parent.stuffEmit('output', buffer);
+    window.parent.stuffEmit("output", buffer);
   } else {
     self.postMessage({
-      type: 'output',
-      data: buffer,
+      type: "output",
+      data: buffer
     });
   }
-  buffer = '';
+  buffer = "";
 }
 
 Messenger.output = function(output) {
@@ -211,10 +212,10 @@ Messenger.output = function(output) {
 Messenger.output.clear = function() {
   flush();
   if (iframe) {
-    window.parent.stuffEmit('clearConsole');
+    window.parent.stuffEmit("clearConsole");
   } else {
     self.postMessage({
-      type: 'clearConsole',
+      type: "clearConsole"
     });
   }
 };
@@ -222,22 +223,22 @@ Messenger.output.clear = function() {
 Messenger.result = function(message) {
   flush();
   if (iframe) {
-    window.parent.stuffEmit('result', message);
+    window.parent.stuffEmit("result", message);
   } else {
     self.postMessage({
-      type: 'result',
-      ...message,
+      type: "result",
+      ...message
     });
   }
 };
 
 Messenger.stderr = function(errStr) {
   if (iframe) {
-    window.parent.stuffEmit('stderr', errStr);
+    window.parent.stuffEmit("stderr", errStr);
   } else {
     self.postMessage({
-      type: 'stderr',
-      errStr,
+      type: "stderr",
+      errStr
     });
   }
 };
@@ -246,11 +247,11 @@ Messenger.error = function(err) {
   Messenger.reportError(err);
 
   if (iframe) {
-    window.parent.stuffEmit('error', err.message);
+    window.parent.stuffEmit("error", err.message);
   } else {
     self.postMessage({
-      type: 'error',
-      data: err.message,
+      type: "error",
+      data: err.message
     });
   }
 
@@ -261,72 +262,72 @@ Messenger.error = function(err) {
 // case the UI wants to react.
 Messenger.inputEvent = () => {
   if (iframe) {
-    window.parent.stuffEmit('input');
+    window.parent.stuffEmit("input");
   } else {
     self.postMessage({
-      type: 'error',
+      type: "error"
     });
   }
 };
 
 Messenger.ready = function() {
   if (iframe) {
-    window.parent.stuffEmit('ready');
+    window.parent.stuffEmit("ready");
   } else {
-    self.postMessage({ type: 'ready' });
+    self.postMessage({ type: "ready" });
   }
 };
 
 Messenger.resetReady = function() {
   if (iframe) {
-    window.parent.stuffEmit('resetReady');
+    window.parent.stuffEmit("resetReady");
   } else {
-    self.postMessage({ type: 'resetReady' });
+    self.postMessage({ type: "resetReady" });
   }
 };
 
 Messenger.warn = function(msg) {
   if (iframe) {
-    window.parent.stuffEmit('warn', msg);
+    window.parent.stuffEmit("warn", msg);
   } else {
     self.postMessage({
-      type: 'warn',
-      data: msg,
+      type: "warn",
+      data: msg
     });
   }
 };
 
 Messenger.checkLineEnd = function(result) {
   if (iframe) {
-    window.parent.stuffEmit('checkLine', result);
+    window.parent.stuffEmit("checkLine", result);
   } else {
     self.postMessage({
-      type: 'checkLine',
-      data: result,
+      type: "checkLine",
+      data: result
     });
   }
 };
 
 Messenger.loadedLibrary = function(name) {
   if (iframe) {
-    window.parent.stuffEmit('loadedLibrary', name);
+    window.parent.stuffEmit("loadedLibrary", name);
   }
 };
 
 Messenger.loadFailedLibrary = function(name, msg) {
   if (iframe) {
-    window.parent.stuffEmit('loadFailedLibrary', name, msg);
+    window.parent.stuffEmit("loadFailedLibrary", name, msg);
   }
 };
 
 Messenger.reportError = e => {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== "development") {
     Sentry.captureException(e);
   }
 };
 
 Messenger.track = (eventName, props) => {
-  window.parent.stuffEmit('track', { eventName, props });
+  window.parent.stuffEmit("track", { eventName, props });
 };
 
 if (iframe) {
@@ -350,8 +351,8 @@ if (iframe) {
     }
   `;
 
-  const style = document.createElement('style');
-  style.type = 'text/css';
+  const style = document.createElement("style");
+  style.type = "text/css";
 
   if (style.styleSheet) {
     style.styleSheet.cssText = css;
