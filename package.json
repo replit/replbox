@@ -1,15 +1,15 @@
 {
   "name": "@replit/replbox",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A sandboxed browser REPL",
   "main": "dist/index.js",
   "files": [
     "/dist"
   ],
   "scripts": {
-    "prepublishOnly": "yarn build && yarn test",
+    "prepublishOnly": "yarn build && yarn test && cp stuffjschild.html dist",
     "clean": "rm -rf ./dist",
-    "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js && cp stuffjschild.html dist",
+    "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js --bail",
     "test": "prettier --check  \"src/**/*.js\" && jest",
     "prettier": "prettier --write \"src/**/*.js\""
   },
