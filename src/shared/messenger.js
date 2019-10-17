@@ -1,6 +1,3 @@
-// TODO
-// require('@replit/sentry-browser');
-
 require('babel-polyfill/browser');
 
 // Loading multiple polyfills fails. Some of our language
@@ -10,28 +7,13 @@ if (typeof window === 'object' && window) {
 }
 
 const { EventEmitter } = require('events');
-// const Sentry = require("@sentry/browser");
+const Sentry = require('@sentry/browser');
 
-// if (process.env.NODE_ENV !== "development") {
-//   const sentryDSN =
-//     process.env.SENTRY_DSN ||
-//     "https://2880e392cac04be5a08725aae4b206cb@sentry.io/100372";
-
-//   Sentry.init({
-//     dsn: sentryDSN,
-//     release: process.env.VERSION,
-//     environment: process.env.NODE_ENV
-//   });
-// }
-// TODO
-const Sentry = new Proxy(
-  {},
-  {
-    get() {
-      return () => {};
-    },
-  },
-);
+Sentry.init({
+  dsn: `https://bd79ab35911e47ed97b779afdb72c4b9@sentry.repl.it/7`,
+  release: require('../../package.json').version,
+  environment: process.env.NODE_ENV,
+});
 
 const Messenger = new EventEmitter();
 
@@ -330,7 +312,7 @@ Messenger.loadFailedLibrary = function(name, msg) {
 };
 
 Messenger.reportError = e => {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV === 'production') {
     Sentry.captureException(e);
   }
 };

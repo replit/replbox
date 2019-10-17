@@ -16,6 +16,7 @@
   "author": "amjad@repl.it",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@sentry/browser": "^5.7.1",
     "apl": "git+https://github.com/ngn/apl.git#cc314fe3be5f2d018d556b7e91916711e46d265e",
     "babel-core": "^6.25.0",
     "babel-generator": "6.26.0",
