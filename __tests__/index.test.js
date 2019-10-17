@@ -1,4 +1,4 @@
-const puppeteer = require("puppeteer");
+const puppeteer = require('puppeteer');
 
 jest.setTimeout(30000);
 
@@ -6,11 +6,11 @@ let server;
 beforeAll(async () => {
   browser = await puppeteer.launch({
     // This means we have pre-installed chromium
-    executablePath: "chromium-browser",
+    executablePath: 'chromium-browser',
 
     // Enabling sandbox takes a lot more setup.
     // See https://github.com/GoogleChrome/puppeteer/issues/290
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 });
 
@@ -22,8 +22,8 @@ let page;
 beforeEach(async () => {
   page = await browser.newPage();
 
-  await page.goto("http://localhost:5000/__tests__/index.html", {
-    waitUntil: "networkidle0"
+  await page.goto('http://localhost:5000/__tests__/index.html', {
+    waitUntil: 'networkidle0',
   });
 });
 
@@ -31,111 +31,111 @@ afterEach(async () => {
   await page.close();
 });
 
-describe("javascript in iframe", () => {
+describe('javascript in iframe', () => {
   beforeEach(async () => {
-    const bundleSrc = getLanguageBundle("javascript");
+    const bundleSrc = getLanguageBundle('javascript');
     await page.evaluate(async bundleSrc => {
-      window.jsbox = new Replbox("javascript", {
-        useIframe: true
+      window.jsbox = new Replbox('javascript', {
+        useIframe: true,
       });
       await window.jsbox.load({
-        iframeOrigin: "/stuffjschild",
-        languageBundleSrc: bundleSrc
+        iframeOrigin: '/stuffjschild',
+        languageBundleSrc: bundleSrc,
       });
     }, bundleSrc);
   });
-  it("should run some code", async () => {
+  it('should run some code', async () => {
     const result = await page.evaluate(() => {
-      return window.jsbox.evaluate("1 + 1", {});
+      return window.jsbox.evaluate('1 + 1', {});
     });
     expect(Number(result.data)).toEqual(2);
   });
-  it("should maintain state", async () => {
+  it('should maintain state', async () => {
     const result = await page.evaluate(async () => {
-      await window.jsbox.evaluate("var x = 23", {});
-      return jsbox.evaluate("x + 1", {});
+      await window.jsbox.evaluate('var x = 23', {});
+      return jsbox.evaluate('x + 1', {});
     });
     expect(Number(result.data)).toEqual(24);
   });
-  it("should stdout", async () => {
+  it('should stdout', async () => {
     const result = await page.evaluate(async () => {
-      let str = "";
+      let str = '';
       function stdout(s) {
         str += s;
       }
       await window.jsbox.evaluate('console.log("foo")', { stdout });
       return str;
     });
-    expect(result).toEqual("foo\n");
+    expect(result).toEqual('foo\n');
   });
-  it("should reset", async () => {
+  it('should reset', async () => {
     const result = await page.evaluate(async () => {
-      await window.jsbox.evaluate("var x = 23", {});
-      return await window.jsbox.evaluate("x", {});
+      await window.jsbox.evaluate('var x = 23', {});
+      return await window.jsbox.evaluate('x', {});
     });
     expect(Number(result.data)).toEqual(23);
     const result2 = await page.evaluate(async () => {
       await window.jsbox.reset();
-      return await window.jsbox.evaluate("x", {});
+      return await window.jsbox.evaluate('x', {});
     });
     expect(result2.error).toMatch(/referenceerror/i);
   });
-  it("should override prompt", async () => {
+  it('should override prompt', async () => {
     const result = await page.evaluate(async () => {
       window.jsbox.overridePrompt();
-      window.jsbox.write("hai");
+      window.jsbox.write('hai');
       return window.jsbox.evaluate('prompt("s")', {});
     });
     expect(result.data).toEqual("'hai'");
   });
 });
 
-describe("infite loop protection", () => {
-  it("should not block forever", async () => {
-    const bundleSrc = getLanguageBundle("javascript");
+describe('infite loop protection', () => {
+  it('should not block forever', async () => {
+    const bundleSrc = getLanguageBundle('javascript');
     const result = await page.evaluate(async bundleSrc => {
-      const replbox = new Replbox("javascript", { useIframe: true });
+      const replbox = new Replbox('javascript', { useIframe: true });
       await replbox.load({
-        iframeOrigin: "/stuffjschild",
-        languageBundleSrc: bundleSrc
+        iframeOrigin: '/stuffjschild',
+        languageBundleSrc: bundleSrc,
       });
 
-      return replbox.evaluate("while (true) 1;", {
-        infiniteLoopProtection: true
+      return replbox.evaluate('while (true) 1;', {
+        infiniteLoopProtection: true,
       });
     }, bundleSrc);
 
     expect(result.error).toMatch(/range/i);
   });
 
-  it("should not block forever", async () => {
-    const bundleSrc = getLanguageBundle("babel");
+  it('should not block forever', async () => {
+    const bundleSrc = getLanguageBundle('babel');
     const result = await page.evaluate(async bundleSrc => {
-      const replbox = new Replbox("babel", { useIframe: true });
+      const replbox = new Replbox('babel', { useIframe: true });
       await replbox.load({
-        iframeOrigin: "/stuffjschild",
-        languageBundleSrc: bundleSrc
+        iframeOrigin: '/stuffjschild',
+        languageBundleSrc: bundleSrc,
       });
 
-      return replbox.evaluate("while (true) 1;", {
-        infiniteLoopProtection: true
+      return replbox.evaluate('while (true) 1;', {
+        infiniteLoopProtection: true,
       });
     }, bundleSrc);
 
     expect(result.error).toMatch(/range/i);
   });
 
-  it("should not block forever", async () => {
-    const bundleSrc = getLanguageBundle("coffeescript");
+  it('should not block forever', async () => {
+    const bundleSrc = getLanguageBundle('coffeescript');
     const result = await page.evaluate(async bundleSrc => {
-      const replbox = new Replbox("coffeescript", { useIframe: true });
+      const replbox = new Replbox('coffeescript', { useIframe: true });
       await replbox.load({
-        iframeOrigin: "/stuffjschild",
-        languageBundleSrc: bundleSrc
+        iframeOrigin: '/stuffjschild',
+        languageBundleSrc: bundleSrc,
       });
 
-      return replbox.evaluate("console.log 1 while 1", {
-        infiniteLoopProtection: true
+      return replbox.evaluate('console.log 1 while 1', {
+        infiniteLoopProtection: true,
       });
     }, bundleSrc);
 
@@ -143,35 +143,35 @@ describe("infite loop protection", () => {
   });
 });
 
-describe("scheme in worker", () => {
+describe('scheme in worker', () => {
   beforeEach(async () => {
-    const bundleSrc = getLanguageBundle("scheme");
+    const bundleSrc = getLanguageBundle('scheme');
     await page.evaluate(async bundleSrc => {
-      window.scbox = new Replbox("scheme");
+      window.scbox = new Replbox('scheme');
       await window.scbox.load({ languageBundleSrc: bundleSrc });
     }, bundleSrc);
   });
 
-  it("should run some code", async () => {
+  it('should run some code', async () => {
     const result = await page.evaluate(async () => {
-      return window.scbox.evaluate("(+ 1 1)", {});
+      return window.scbox.evaluate('(+ 1 1)', {});
     });
 
     expect(Number(result.data)).toEqual(2);
   });
 
-  it("should maintain state", async () => {
+  it('should maintain state', async () => {
     const result = await page.evaluate(async () => {
-      await window.scbox.evaluate("(define x 23)", {});
-      return window.scbox.evaluate("x", {});
+      await window.scbox.evaluate('(define x 23)', {});
+      return window.scbox.evaluate('x', {});
     });
 
     expect(Number(result.data)).toEqual(23);
   });
 
-  it("should stdout", async () => {
+  it('should stdout', async () => {
     const result = await page.evaluate(async () => {
-      let str = "";
+      let str = '';
       function stdout(s) {
         str += s;
       }
@@ -180,29 +180,29 @@ describe("scheme in worker", () => {
       return str;
     });
 
-    expect(result).toEqual("foo");
+    expect(result).toEqual('foo');
   });
 
-  it("should reset", async () => {
+  it('should reset', async () => {
     const result = await page.evaluate(async () => {
-      await window.scbox.evaluate("(define x 23)", {});
-      return await window.scbox.evaluate("x", {});
+      await window.scbox.evaluate('(define x 23)', {});
+      return await window.scbox.evaluate('x', {});
     });
     expect(Number(result.data)).toEqual(23);
 
     const result2 = await page.evaluate(async () => {
       await window.scbox.reset();
-      return await window.scbox.evaluate("x", {});
+      return await window.scbox.evaluate('x', {});
     });
 
     expect(result2.error).toMatch(/unbound/i);
   });
 });
 
-describe("web_project", () => {
+describe('web_project', () => {
   const FILES = [
     {
-      name: "index.html",
+      name: 'index.html',
       content: `
         <!doctype html>
         <html>
@@ -210,34 +210,34 @@ describe("web_project", () => {
             <script src="index.js"></script>
             <div class="foo"></div>
           </body>
-        </html>`
+        </html>`,
     },
     {
-      name: "index.js",
+      name: 'index.js',
       content: `
         function add(a, b) {
           return a + b;
-        }`
-    }
+        }`,
+    },
   ];
 
   beforeEach(async () => {
-    const bundleSrc = getLanguageBundle("web_project");
+    const bundleSrc = getLanguageBundle('web_project');
     await page.evaluate(async bundleSrc => {
-      window.wpbox = new Replbox("web_project", { useIframe: true });
+      window.wpbox = new Replbox('web_project', { useIframe: true });
       await window.wpbox.load({
-        iframeOrigin: "/stuffjschild",
-        languageBundleSrc: bundleSrc
+        iframeOrigin: '/stuffjschild',
+        languageBundleSrc: bundleSrc,
       });
     }, bundleSrc);
   });
 
-  it("should run jasmine test successfully", async () => {
+  it('should run jasmine test successfully', async () => {
     const result = await page.evaluate(
       async (files, suiteCode) => {
         return window.wpbox.runUnitTests({
           files,
-          suiteCode
+          suiteCode,
         });
       },
       FILES,
@@ -247,21 +247,21 @@ describe("web_project", () => {
           expect(add(1, 3)).toBe(4);
         });
       });
-      `
+      `,
     );
 
     expect(result).toEqual({
       passed: true,
-      failures: []
+      failures: [],
     });
   });
 
-  it("should run jasmine test with failure", async () => {
+  it('should run jasmine test with failure', async () => {
     const result = await page.evaluate(
       async (files, suiteCode) => {
         return window.wpbox.runUnitTests({
           files,
-          suiteCode
+          suiteCode,
         });
       },
       FILES,
@@ -271,21 +271,21 @@ describe("web_project", () => {
           expect(add(1, 3)).toBe(5);
         });
       });
-    `
+    `,
     );
 
     expect(result.passed).toBeFalsy();
     expect(result.failures).toHaveLength(1);
-    expect(result.failures[0].name).toEqual("should add");
+    expect(result.failures[0].name).toEqual('should add');
     expect(result.failures[0].stack.length).toBeTruthy();
   });
 
-  it("should run find foo", async () => {
+  it('should run find foo', async () => {
     const result = await page.evaluate(
       async (files, suiteCode) => {
         return window.wpbox.runUnitTests({
           files,
-          suiteCode
+          suiteCode,
         });
       },
       FILES,
@@ -295,16 +295,16 @@ describe("web_project", () => {
             expect('.foo').toExist();
           });
         });
-      `
+      `,
     );
 
     expect(result).toEqual({
       passed: true,
-      failures: []
+      failures: [],
     });
   });
 });
 
 function getLanguageBundle(language) {
-  return `/dist/replbox_${language}.bundle.js`;
+  return `/dist/${language}.js`;
 }
