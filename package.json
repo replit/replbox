@@ -5,7 +5,7 @@
   "main": "src/client/index.js",
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js --json > stats.json",
+    "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js",
     "test": "jest"
   },
   "author": "amjad@repl.it",
@@ -39,5 +39,11 @@
     "webpack": "3.10",
     "whatwg-fetch": "^3.0.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "jest": {
+    "globalSetup": "<rootDir>/jest_setup.js",
+    "globalTeardown": "<rootDir>/jest_teardown.js",
+    "verbose": true,
+    "bail": 1
+  }
 }
