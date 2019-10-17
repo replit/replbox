@@ -1,9 +1,13 @@
 {
   "name": "@replit/replbox",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A sandboxed browser REPL",
-  "main": "src/client/index.js",
+  "main": "dist/client.bundle.js",
+  "files": [
+    "/dist"
+  ],
   "scripts": {
+    "prepublishOnly": "yarn build && yarn test",
     "clean": "rm -rf ./dist",
     "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js",
     "test": "jest"
