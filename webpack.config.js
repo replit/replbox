@@ -89,10 +89,7 @@ function createConfig(name, entryPath) {
     entry: entryPath,
     output: {
       path: path.resolve(__dirname, "dist"),
-      filename: name + ".bundle.js",
-      chunkFilename: prod
-        ? name + ".[chunkhash].[id].chunk.js"
-        : name + ".[id].chunk.js"
+      filename: name + ".js"
     },
     devtool: "source-map",
     resolve: {
@@ -122,7 +119,7 @@ const configs = [];
 
 // replbox bundle
 const clientConfig = createConfig(
-  "client",
+  "index",
   path.resolve(__dirname, "src", "client", "index.js")
 );
 clientConfig.output.library = "Replbox";
@@ -134,7 +131,7 @@ const langs = fs.readdirSync(path.resolve(__dirname, "src", "languages"));
 for (const lang of langs) {
   const dir = path.resolve(__dirname, "src", "languages", lang);
   if (fs.statSync(dir).isDirectory()) {
-    configs.push(createConfig("replbox_" + lang, path.join(dir, "index.js")));
+    configs.push(createConfig(lang, path.join(dir, "index.js")));
   }
 }
 
