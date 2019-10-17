@@ -22,7 +22,7 @@ let page;
 beforeEach(async () => {
   page = await browser.newPage();
 
-  await page.goto('http://localhost:5000/__tests__/index.html', {
+  await page.goto('http://localhost:5050/__tests__/index.html', {
     waitUntil: 'networkidle0',
   });
 });
