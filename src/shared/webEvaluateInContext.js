@@ -1,6 +1,5 @@
 const Messenger = require('./messenger');
 const transform = require('./transforms');
-// const { events } = require('@replit/tracking/client');
 const fetchModules = require('./fetchModules');
 const { inspect } = require('./util');
 const stackTracer = require('./stackTracer');
@@ -53,10 +52,9 @@ module.exports = (code, { context, infiniteLoopProtection }) =>
     let result;
 
     if (imports.length) {
-      // TODO
-      // Messenger.track(events.MODULES_FETCHED, {
-      //   language: 'javascript',
-      // });
+      Messenger.track('Modules Fetched', {
+        language: 'javascript',
+      });
 
       fetchModules(imports).then(
         bundle => {

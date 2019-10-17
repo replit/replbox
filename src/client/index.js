@@ -24,13 +24,17 @@ const webLanguages = [
 ];
 
 class Replbox extends EventEmitter {
-  constructor(language, { useIframe, timeoutCallback, iframeParent } = {}) {
+  constructor(
+    language,
+    { useIframe, timeoutCallback, iframeParent, track } = {},
+  ) {
     super();
     this._language = language;
     this._useIframe = !!useIframe;
     this._iframeParent = iframeParent;
     this._timeoutCallback = timeoutCallback;
     this._loadLibraryPromises = {};
+    this._track = track;
   }
 
   load({ iframeOrigin, languageBundleSrc }) {
@@ -68,12 +72,11 @@ class Replbox extends EventEmitter {
           context.on('loadFailedLibrary', (name, msg) =>
             this._loadLibraryPromises[name].reject(msg),
           );
-          context.on(
-            'track',
-            ({ eventName, props }) => {},
-            // TODO
-            // track(eventName, props)
-          );
+          context.on('track', ({ eventName, props }) => {
+            if (this._track) {
+              this._track(eventName, props);
+            }
+          });
           context.on('error', msg => this._reject(new Error(msg)));
           context.on('input', () => this.emit('input'));
           context.on('clearConsole', () => this.emit('clearConsole'));
@@ -114,8 +117,9 @@ class Replbox extends EventEmitter {
               this._resetReady();
               break;
             case 'track':
-              // TODO
-              // track(message.data.eventName, message.data.props);
+              if (this._track) {
+                this._track(message.data.eventName, message.data.props);
+              }
               break;
             case 'input':
               this.emit('input');

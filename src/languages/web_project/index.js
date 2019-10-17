@@ -3,7 +3,6 @@ const Console = require('../../shared/console');
 const fetchModules = require('../../shared/fetchModules');
 const path = require('path');
 const stackTracer = require('../../shared/stackTracer');
-// const { events } = require('@replit/tracking/client');
 const { fetch } = require('whatwg-fetch');
 const { inspect } = require('util');
 const Jasmine = require('jasmine-core/lib/jasmine-core/jasmine.js');
@@ -358,10 +357,9 @@ function uploadLegacyWebProject(files) {
   }
 
   if (jsRequires.length) {
-    // TODO
-    // Messenger.track(events.MODULES_FETCHED, {
-    //   language: 'web_project',
-    // });
+    Messenger.track('Modules Fetched', {
+      language: 'web_project',
+    });
   }
 
   const fetchingModules = !jsRequires.length

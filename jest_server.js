@@ -57,8 +57,6 @@ function teardown(done) {
   }
 }
 
-setup();
-
 module.exports = {
   setup,
   teardown,
