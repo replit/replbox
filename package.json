@@ -5,11 +5,12 @@
   "main": "src/client/index.js",
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js --bail"
+    "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js --json > stats.json",
+    "test": "jest"
   },
   "author": "amjad@repl.it",
   "license": "UNLICENSED",
-  "dependencies": {
+  "devDependencies": {
     "apl": "git+https://github.com/ngn/apl.git#cc314fe3be5f2d018d556b7e91916711e46d265e",
     "babel-core": "^6.25.0",
     "babel-generator": "6.26.0",
@@ -22,16 +23,21 @@
     "babylon": "6.18.0",
     "biwascheme": "git+https://github.com/masad-frost/biwascheme.git#3c0d5a67cd1af696c69ab7fb085b2f42c8b0586c",
     "context-eval": "^0.1.0",
+    "empty-module": "^0.0.2",
     "happypack": "^4.0.1",
     "inspect-x": "1.7.0",
     "jasmine-core": "^2.4.1",
     "jasmine_dom_matchers": "^1.4.0",
+    "jest": "^24.9.0",
+    "jest-dev-server": "^4.3.0",
     "puppeteer": "^1.11.0",
     "script-loader": "0.7.0",
+    "serve": "^11.2.0",
     "stuff.js": "^0.4.1",
     "underscore": "1.2.2",
     "underscore.string": "2.0.0",
     "webpack": "3.10",
     "whatwg-fetch": "^3.0.0"
-  }
+  },
+  "dependencies": {}
 }

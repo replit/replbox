@@ -66,7 +66,10 @@ function createConfig(name, entryPath) {
         {
           path: "babel-loader",
           query: {
-            presets: ["env", "stage-2"],
+            presets: [
+              ["env", { targets: { browsers: ["ie > 10"] } }],
+              "stage-2"
+            ],
             babelrc: false,
             cacheDirectory: true
           }
@@ -89,15 +92,15 @@ function createConfig(name, entryPath) {
       filename: name + ".bundle.js",
       chunkFilename: prod
         ? name + ".[chunkhash].[id].chunk.js"
-        : name + ".[id].chunk.js",
-      publicPath: "/public/"
+        : name + ".[id].chunk.js"
     },
     devtool: "source-map",
-    resolveLoader: {
-      modules: [path.resolve(__dirname, "node_modules"), "node_modules"]
-    },
     resolve: {
-      modules: [path.resolve(__dirname, "node_modules"), "node_modules"]
+      alias: {
+        // Chalk is required by babel-code-frame which is required by babel-traverse
+        // but it's actually useless for us
+        chalk: "empty-module"
+      }
     },
     module: {
       rules: [
@@ -118,9 +121,13 @@ function createConfig(name, entryPath) {
 const configs = [];
 
 // replbox bundle
-configs.push(
-  createConfig("client", path.resolve(__dirname, "src", "client", "index.js"))
+const clientConfig = createConfig(
+  "client",
+  path.resolve(__dirname, "src", "client", "index.js")
 );
+clientConfig.output.library = "Replbox";
+clientConfig.output.libraryTarget = "umd";
+configs.push(clientConfig);
 
 // language bundles
 const langs = fs.readdirSync(path.resolve(__dirname, "src", "languages"));
@@ -129,15 +136,6 @@ for (const lang of langs) {
   if (fs.statSync(dir).isDirectory()) {
     configs.push(createConfig("replbox_" + lang, path.join(dir, "index.js")));
   }
-}
-
-if (!prod) {
-  configs.push(
-    createConfig(
-      "replbox_window",
-      path.join(__dirname, "integration_tests", "replbox_window.js")
-    )
-  );
 }
 
 module.exports = configs;
