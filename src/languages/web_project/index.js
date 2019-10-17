@@ -1,26 +1,26 @@
-const Messenger = require("../../shared/messenger");
-const Console = require("../../shared/console");
-const fetchModules = require("../../shared/fetchModules");
-const path = require("path");
-const stackTracer = require("../../shared/stackTracer");
+const Messenger = require('../../shared/messenger');
+const Console = require('../../shared/console');
+const fetchModules = require('../../shared/fetchModules');
+const path = require('path');
+const stackTracer = require('../../shared/stackTracer');
 // const { events } = require('@replit/tracking/client');
-const { fetch } = require("whatwg-fetch");
-const { inspect } = require("util");
-const Jasmine = require("jasmine-core/lib/jasmine-core/jasmine.js");
-const jasmineDomMatchersCode = require("raw-loader!jasmine_dom_matchers/matchers");
+const { fetch } = require('whatwg-fetch');
+const { inspect } = require('util');
+const Jasmine = require('jasmine-core/lib/jasmine-core/jasmine.js');
+const jasmineDomMatchersCode = require('raw-loader!jasmine_dom_matchers/matchers');
 
 let contentWindow;
 
 // TODO: infiniteLoopProtection
-Messenger.on("runProject", ({ files, replId }) => {
+Messenger.on('runProject', ({ files, replId }) => {
   (replId ? uploadWebProject({ files, replId }) : uploadLegacyWebProject(files))
     .then(url => buildIframe({ url }))
     .then(() => Messenger.result({ error: null }))
     .catch(Messenger.error);
 });
 
-Messenger.on("reset", () => {
-  const el = document.getElementById("web_target");
+Messenger.on('reset', () => {
+  const el = document.getElementById('web_target');
   if (el) {
     document.body.removeChild(el);
   }
@@ -28,14 +28,14 @@ Messenger.on("reset", () => {
   Messenger.resetReady();
 });
 
-Messenger.on("refresh", () => {
-  document.getElementById("web_target").src += "";
+Messenger.on('refresh', () => {
+  document.getElementById('web_target').src += '';
 });
 
-Messenger.on("evaluate", ({ code }) => {
+Messenger.on('evaluate', ({ code }) => {
   if (!contentWindow) {
     Messenger.result({
-      error: "Please run your project before using the console."
+      error: 'Please run your project before using the console.',
     });
     return;
   }
@@ -45,7 +45,7 @@ Messenger.on("evaluate", ({ code }) => {
     result = contentWindow.eval(code);
   } catch (e) {
     Messenger.result({
-      error: stackTracer(e, { isIframe: Messenger.isIframe })
+      error: stackTracer(e, { isIframe: Messenger.isIframe }),
     });
 
     return;
@@ -54,7 +54,7 @@ Messenger.on("evaluate", ({ code }) => {
   Messenger.result({ data: inspect(result) });
 });
 
-Messenger.on("checkLine", command =>
+Messenger.on('checkLine', command =>
   Messenger.checkLineEnd(
     (() => {
       try {
@@ -69,8 +69,8 @@ Messenger.on("checkLine", command =>
         }
         return 0;
       }
-    })()
-  )
+    })(),
+  ),
 );
 
 class Reporter {
@@ -96,7 +96,7 @@ class Reporter {
   passed() {
     for (let i = 0; i < this._specs.length; i++) {
       const spec = this._specs[i];
-      if (spec.status !== "passed") {
+      if (spec.status !== 'passed') {
         return false;
       }
     }
@@ -107,10 +107,10 @@ class Reporter {
     const ret = [];
     for (let i = 0; i < this._specs.length; i++) {
       const spec = this._specs[i];
-      if (spec.status === "failed") {
+      if (spec.status === 'failed') {
         ret.push({
           name: spec.description,
-          stack: spec.failedExpectations[0].stack
+          stack: spec.failedExpectations[0].stack,
         });
       }
     }
@@ -118,7 +118,7 @@ class Reporter {
   }
 }
 
-Messenger.on("runUnitTests", ({ files, suiteCode }) => {
+Messenger.on('runUnitTests', ({ files, suiteCode }) => {
   uploadLegacyWebProject(files)
     .then(url => buildIframe({ url, hidden: true }))
     .then(iframe => {
@@ -131,9 +131,9 @@ Messenger.on("runUnitTests", ({ files, suiteCode }) => {
           Messenger.result({
             error: reporter.error(),
             passed: reporter.passed(),
-            failures: reporter.failures()
+            failures: reporter.failures(),
           });
-        })
+        }),
       );
 
       const jasmineInterface = Jasmine.interface(jasmine, env);
@@ -152,7 +152,7 @@ Messenger.on("runUnitTests", ({ files, suiteCode }) => {
 
         return module.exports;
       }).call(null, { exports: {} });
-    `
+    `,
       );
 
       jasmineInterface.beforeEach(() => {
@@ -173,22 +173,22 @@ Messenger.on("runUnitTests", ({ files, suiteCode }) => {
 
 function buildIframe({ url, hidden }) {
   return new Promise(resolve => {
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("id", "web_target");
-    iframe.style.height = "100%";
-    iframe.style.width = "100%";
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('id', 'web_target');
+    iframe.style.height = '100%';
+    iframe.style.width = '100%';
 
     if (hidden) {
-      iframe.style.display = "none";
+      iframe.style.display = 'none';
     }
 
     iframe.src = url;
     iframe.setAttribute(
-      "sandbox",
-      "allow-forms allow-pointer-lock allow-popups " +
-        "allow-same-origin allow-scripts allow-modals"
+      'sandbox',
+      'allow-forms allow-pointer-lock allow-popups ' +
+        'allow-same-origin allow-scripts allow-modals',
     );
-    iframe.setAttribute("frameborder", "0");
+    iframe.setAttribute('frameborder', '0');
 
     document.body.appendChild(iframe);
 
@@ -198,14 +198,14 @@ function buildIframe({ url, hidden }) {
     iframe.contentWindow.onerror = (msg, urlError, lineNo, colNo, e) => {
       if (e && e.stack) {
         return Messenger.stderr(
-          stackTracer(e, { isIframe: Messenger.isIframe })
+          stackTracer(e, { isIframe: Messenger.isIframe }),
         );
       }
 
       return Messenger.stderr(msg);
     };
 
-    iframe.addEventListener("load", () => {
+    iframe.addEventListener('load', () => {
       resolve(iframe);
     });
   });
@@ -223,7 +223,7 @@ function uploadWebProject({ files, replId }) {
   let indexHtml;
 
   files.forEach(file => {
-    if (file.name === "index.html") {
+    if (file.name === 'index.html') {
       indexHtml = file;
       return;
     }
@@ -231,7 +231,7 @@ function uploadWebProject({ files, replId }) {
     const ext = path.extname(file.name);
 
     // Extract requires
-    if (ext === ".js") {
+    if (ext === '.js') {
       // Reset regexp state just to be safe.
       requireRe.lastIndex = 0;
       let m;
@@ -253,9 +253,9 @@ function uploadWebProject({ files, replId }) {
       const script = `<script src="https://wzrd.repl.it/bundle/${require}"></script>`;
 
       // Add it before the first <script> tag to setup dependencies.
-      let i = html.indexOf("<script");
+      let i = html.indexOf('<script');
       // No script tag, just add it before the end of body.
-      if (i === -1) i = html.indexOf("</body>");
+      if (i === -1) i = html.indexOf('</body>');
 
       if (i === -1) {
         // No script tag just add it to the end
@@ -275,14 +275,14 @@ function uploadWebProject({ files, replId }) {
     body.indexHtml = html;
   }
 
-  return fetch("/data/web_project/host_repl", {
+  return fetch('/data/web_project/host_repl', {
     headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest"
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
     },
 
     body: JSON.stringify(body),
-    method: "POST"
+    method: 'POST',
   })
     .then(r => {
       if (r.status !== 200) {
@@ -302,7 +302,7 @@ function uploadLegacyWebProject(files) {
     const ext = path.extname(file.name);
 
     // Extract requires
-    if (ext === ".js") {
+    if (ext === '.js') {
       // Reset regexp state just to be safe.
       requireRe.lastIndex = 0;
       let m;
@@ -315,7 +315,7 @@ function uploadLegacyWebProject(files) {
       } while (m);
     }
 
-    if (!firstHtml && ext === ".html") {
+    if (!firstHtml && ext === '.html') {
       firstHtml = file.content;
     }
 
@@ -327,17 +327,17 @@ function uploadLegacyWebProject(files) {
   // to make this an honest implementation (loading from the server)
   // we're going to include index.js and index.css (if they're not
   // included) which will support most of the existing cases.
-  if (!filesByName["index.html"]) {
-    filesByName["index.html"] = firstHtml;
+  if (!filesByName['index.html']) {
+    filesByName['index.html'] = firstHtml;
   }
 
-  let indexHtml = filesByName["index.html"];
-  const indexCss = filesByName["index.css"];
-  const indexJs = filesByName["index.js"];
+  let indexHtml = filesByName['index.html'];
+  const indexCss = filesByName['index.css'];
+  const indexJs = filesByName['index.js'];
   if (indexHtml) {
-    if (indexCss && indexHtml.indexOf("index.css") === -1) {
+    if (indexCss && indexHtml.indexOf('index.css') === -1) {
       const style = `<style>${indexCss}</style>`;
-      const i = indexHtml.indexOf("</head>");
+      const i = indexHtml.indexOf('</head>');
       if (i !== -1) {
         indexHtml = indexHtml.slice(0, i) + style + indexHtml.slice(i);
       } else {
@@ -345,16 +345,16 @@ function uploadLegacyWebProject(files) {
       }
     }
 
-    if (indexJs && indexHtml.indexOf("index.js") === -1) {
+    if (indexJs && indexHtml.indexOf('index.js') === -1) {
       const script = `<script>${indexJs}</script>`;
-      const i = indexHtml.indexOf("</body>");
+      const i = indexHtml.indexOf('</body>');
       if (i !== -1) {
         indexHtml = indexHtml.slice(0, i) + script + indexHtml.slice(i);
       } else {
         indexHtml += script;
       }
     }
-    filesByName["index.html"] = indexHtml;
+    filesByName['index.html'] = indexHtml;
   }
 
   if (jsRequires.length) {
@@ -368,12 +368,12 @@ function uploadLegacyWebProject(files) {
     ? Promise.resolve()
     : fetchModules(jsRequires).then(bundle => {
         const script = `<script>${bundle}</script>`;
-        let html = filesByName["index.html"];
+        let html = filesByName['index.html'];
 
         // Add it before the first <script> tag to setup dependencies.
-        let i = html.indexOf("<script");
+        let i = html.indexOf('<script');
         // No script tag, just add it before the end of body.
-        if (i === -1) i = html.indexOf("</body>");
+        if (i === -1) i = html.indexOf('</body>');
 
         if (i === -1) {
           // No script tag just add it to the end
@@ -383,21 +383,21 @@ function uploadLegacyWebProject(files) {
           html = html.slice(0, i) + script + html.slice(i);
         }
 
-        filesByName["index.html"] = html;
+        filesByName['index.html'] = html;
       });
 
   return fetchingModules.then(() =>
-    fetch("/data/web_project/upload", {
+    fetch('/data/web_project/upload', {
       headers: {
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest"
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
       },
       body: JSON.stringify(filesByName),
-      method: "POST"
+      method: 'POST',
     })
       .then(r => {
         if (r.status === 409) {
-          throw new Error("Code has changed, please run again");
+          throw new Error('Code has changed, please run again');
         }
 
         if (r.status !== 200) {
@@ -406,7 +406,7 @@ function uploadLegacyWebProject(files) {
 
         return r.json();
       })
-      .then(({ id }) => `/data/web_project/${id}/index.html`)
+      .then(({ id }) => `/data/web_project/${id}/index.html`),
   );
 }
 

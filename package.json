@@ -2,7 +2,7 @@
   "name": "@replit/replbox",
   "version": "1.0.3",
   "description": "A sandboxed browser REPL",
-  "main": "dist/client.bundle.js",
+  "main": "dist/index.js",
   "files": [
     "/dist"
   ],
@@ -10,7 +10,8 @@
     "prepublishOnly": "yarn build && yarn test",
     "clean": "rm -rf ./dist",
     "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js && cp stuffjschild.html dist",
-    "test": "jest"
+    "test": "prettier --check  \"src/**/*.js\" && jest",
+    "prettier": "prettier --write \"src/**/*.js\""
   },
   "author": "amjad@repl.it",
   "license": "UNLICENSED",
@@ -33,10 +34,10 @@
     "jasmine-core": "^2.4.1",
     "jasmine_dom_matchers": "^1.4.0",
     "jest": "^24.9.0",
-    "jest-dev-server": "^4.3.0",
+    "prettier": "^1.18.2",
     "puppeteer": "^1.11.0",
     "script-loader": "0.7.0",
-    "serve": "^11.2.0",
+    "serve-handler": "^6.1.2",
     "stuff.js": "^0.4.1",
     "underscore": "1.2.2",
     "underscore.string": "2.0.0",
@@ -49,5 +50,11 @@
     "globalTeardown": "<rootDir>/jest_teardown.js",
     "verbose": true,
     "bail": 1
+  },
+  "prettier": {
+    "trailingComma": "all",
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true
   }
 }
