@@ -1,6 +1,6 @@
 {
   "name": "@replit/replbox",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A sandboxed browser REPL",
   "main": "dist/client.bundle.js",
   "files": [
