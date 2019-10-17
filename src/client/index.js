@@ -3,7 +3,6 @@
 
 const { EventEmitter } = require("events");
 // const Languages = require('@replit/languages');
-const fetch = require("whatwg-fetch");
 // const { track } = require('@replit/tracking/client');
 
 const stuff = require("stuff.js");
@@ -15,8 +14,16 @@ const createStuff = (el, origin) =>
     });
   });
 
-// TODO timeoutcallback
-class ReplBox extends EventEmitter {
+const webLanguages = [
+  "html",
+  "web_project",
+  "coffeescript",
+  "javascript",
+  "babel",
+  "roy"
+];
+
+class Replbox extends EventEmitter {
   constructor(language, { useIframe, timeoutCallback, iframeParent } = {}) {
     super();
     this._language = language;
@@ -26,7 +33,10 @@ class ReplBox extends EventEmitter {
     this._loadLibraryPromises = {};
   }
 
-  load(iframeOrigin, languageBundleSrc) {
+  load({ iframeOrigin, languageBundleSrc }) {
+    // For replbox.reset
+    this._lastLoadArgs = { iframeOrigin, languageBundleSrc };
+
     return new Promise((resolve, reject) => {
       if (this._useIframe) {
         this._el = document.createElement("div");
@@ -41,37 +51,35 @@ class ReplBox extends EventEmitter {
           this._iframeParent.appendChild(this._el);
         }
 
-        createStuff(this._el, iframeOrigin)
-          .then(context => {
-            this._stuffContext = context;
-            context.on("result", data => {
-              this._resolve(data);
-            });
-            context.on("ready", () => resolve());
-            context.on("warn", msg => this.emit("warn", msg));
-            context.on("checkLine", msg => this.checkLineCb(msg));
-            context.on("output", msg => this._stdout(msg));
-            context.on("stderr", msg => this._stderr(msg));
-            context.on("resetReady", () => this._resetReady());
-            context.on("loadedLibrary", name =>
-              this._loadLibraryPromises[name].resolve()
-            );
-            context.on("loadFailedLibrary", (name, msg) =>
-              this._loadLibraryPromises[name].reject(msg)
-            );
-            context.on(
-              "track",
-              ({ eventName, props }) => {}
-              // TODO
-              // track(eventName, props)
-            );
-            context.on("error", msg => this._reject(new Error(msg)));
-            context.on("input", () => this.emit("input"));
-            context.on("clearConsole", () => this.emit("clearConsole"));
+        createStuff(this._el, iframeOrigin).then(context => {
+          this._stuffContext = context;
+          context.on("result", data => {
+            this._resolve(data);
+          });
+          context.on("ready", () => resolve());
+          context.on("warn", msg => this.emit("warn", msg));
+          context.on("checkLine", msg => this.checkLineCb(msg));
+          context.on("output", msg => this._stdout(msg));
+          context.on("stderr", msg => this._stderr(msg));
+          context.on("resetReady", () => this._resetReady());
+          context.on("loadedLibrary", name =>
+            this._loadLibraryPromises[name].resolve()
+          );
+          context.on("loadFailedLibrary", (name, msg) =>
+            this._loadLibraryPromises[name].reject(msg)
+          );
+          context.on(
+            "track",
+            ({ eventName, props }) => {}
+            // TODO
+            // track(eventName, props)
+          );
+          context.on("error", msg => this._reject(new Error(msg)));
+          context.on("input", () => this.emit("input"));
+          context.on("clearConsole", () => this.emit("clearConsole"));
 
-            context.load(`<script src=${languageBundleSrc}></script>`);
-          })
-          .done();
+          context.load(`<script src=${languageBundleSrc}></script>`);
+        });
       } else {
         this._worker = new Worker(languageBundleSrc);
         this._worker.onerror = e => reject(e.data || "unknown error");
@@ -224,13 +232,12 @@ class ReplBox extends EventEmitter {
   }
 
   reset() {
-    // TODO
-    // if (Languages.get(this._language).category === "Web") {
-    //   return this._resetWeb();
-    // }
+    if (webLanguages.includes(this._language)) {
+      return this._resetWeb();
+    }
 
     this.destroy();
-    return this.load();
+    return this.load(this._lastLoadArgs);
   }
 
   checkLineEnd(command, callback) {
@@ -309,4 +316,4 @@ class ReplBox extends EventEmitter {
   }
 }
 
-module.exports = ReplBox;
+module.exports = Replbox;
