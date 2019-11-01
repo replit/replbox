@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer');
 jest.setTimeout(30000);
 
 let server;
+let browser;
 beforeAll(async () => {
   browser = await puppeteer.launch({
     // This means we have pre-installed chromium
