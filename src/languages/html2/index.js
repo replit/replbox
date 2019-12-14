@@ -102,7 +102,7 @@ function buildIframe({ url }) {
 
     contentWindow = iframe.contentWindow;
     Hook(iframe.contentWindow.console, encodedLog => {
-      window.parent.stuffEmit('cf-output', message);
+      window.parent.stuffEmit('cf-output', encodedLog);
     });
 
     iframe.contentWindow.onerror = (msg, fileUrl, lineNo, colNo, e) => {
