@@ -3,7 +3,7 @@
 const Messenger = require('../../shared/messenger');
 const stackTracer = require('../../shared/stackTracer');
 const { inspect } = require('../../shared/util');
-const { Hook } = require('console-feed');
+const { preserve } = require('@replit/alcor');
 
 let contentWindow;
 
@@ -101,9 +101,19 @@ function buildIframe({ url }) {
     document.body.appendChild(iframe);
 
     contentWindow = iframe.contentWindow;
-    Hook(iframe.contentWindow.console, encodedLog => {
-      window.parent.stuffEmit('cf-output', encodedLog);
-    });
+
+    const nativeLog = iframe.contentWindow.console.log;
+    iframe.contentWindow.console.log = function() {
+      nativeLog.apply(this, arguments);
+
+      const args = [].slice.call(arguments);
+
+      const data = args.map(preserve);
+      window.parent.stuffEmit('cf-output', {
+        type: 'log',
+        data,
+      });
+    };
 
     iframe.contentWindow.onerror = (msg, fileUrl, lineNo, colNo, e) => {
       if (e && e.stack) {
