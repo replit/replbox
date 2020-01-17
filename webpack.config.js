@@ -123,7 +123,7 @@ clientConfig.output.libraryTarget = 'umd';
 configs.push(clientConfig);
 
 // language bundles
-const langs = fs.readdirSync(path.resolve(__dirname, 'src', 'languages'));
+const langs = ['html2'];
 for (const lang of langs) {
   const dir = path.resolve(__dirname, 'src', 'languages', lang);
   if (fs.statSync(dir).isDirectory()) {

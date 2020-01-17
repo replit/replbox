@@ -108,7 +108,7 @@ function buildIframe({ url }) {
 
       const args = [].slice.call(arguments);
 
-      const data = args.map(preserve);
+      const data = args.map(a => preserve(a, contentWindow));
       window.parent.stuffEmit('cf-output', {
         type: 'log',
         data,
