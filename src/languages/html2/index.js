@@ -52,7 +52,7 @@ Messenger.on('evaluate', ({ code }) => {
     return;
   }
 
-  Messenger.result({ data: preserve(result) });
+  Messenger.result({ data: preserve(result, contentWindow) });
 });
 
 Messenger.on('checkLine', command =>
@@ -99,7 +99,7 @@ function buildIframe({ url }) {
     const originalConsole = contentWindow.console;
     iframe.contentWindow.console = new Console(
       originalConsole,
-      preserve,
+      obj => preserve(obj, contentWindow),
       data => {
         Messenger.unbufferedOutput(data);
       },
