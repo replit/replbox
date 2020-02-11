@@ -200,6 +200,17 @@ Messenger.output = function(output) {
   }
 };
 
+Messenger.unbufferedOutput = function(output) {
+  if (iframe) {
+    window.parent.stuffEmit('output', output);
+  } else {
+    self.postMessage({
+      type: 'output',
+      data: output,
+    });
+  }
+};
+
 Messenger.output.clear = function() {
   flush();
   if (iframe) {
