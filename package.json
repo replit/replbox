@@ -1,6 +1,6 @@
 {
   "name": "@replit/replbox",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "A sandboxed browser REPL",
   "main": "dist/index.js",
   "files": [
@@ -16,6 +16,7 @@
   "author": "amjad@repl.it",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@replit/alcor": "^0.1.0",
     "@sentry/browser": "^5.7.1",
     "apl": "git+https://github.com/ngn/apl.git#cc314fe3be5f2d018d556b7e91916711e46d265e",
     "babel-core": "^6.25.0",
