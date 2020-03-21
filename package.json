@@ -11,7 +11,8 @@
     "clean": "rm -rf ./dist",
     "build": "yarn clean && NODE_ENV=production webpack --config ./webpack.config.js --bail",
     "test": "prettier --check  \"src/**/*.js\" && jest",
-    "prettier": "prettier --write \"src/**/*.js\""
+    "prettier": "prettier --write \"src/**/*.js\"",
+    "dev": "NODE_ENV=development node dev_server.js"
   },
   "author": "amjad@repl.it",
   "license": "UNLICENSED",
@@ -46,7 +47,12 @@
     "webpack": "3.10",
     "whatwg-fetch": "^3.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "babel-types": "^6.26.0",
+    "codemirror": "^5.52.0",
+    "express": "^4.17.1",
+    "webpack-dev-middleware": "^2"
+  },
   "jest": {
     "globalSetup": "<rootDir>/jest_setup.js",
     "globalTeardown": "<rootDir>/jest_teardown.js",
