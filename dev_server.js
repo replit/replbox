@@ -4,11 +4,12 @@ const webpack = require('webpack');
 const config = require('./webpack.config');
 
 const app = express();
-console.log(config)
 const compiler = webpack(config);
-app.use(midware(compiler, {
-  publicPath: '/dist',    
-}));
+app.use(
+  midware(compiler, {
+    publicPath: '/dist',
+  }),
+);
 
 const uploadedFiles = [];
 app.post('/data/upload', (request, response) => {
@@ -39,9 +40,14 @@ app.get('/data/web_project/:id/:fileName?', (request, response) => {
   response.end(file);
 });
 
-app.use(express.static('dev'));
-app.use('/dist', express.static('dist'));
-app.use('/codemirror', express.static('node_modules/codemirror'))
+app.get('/data/languages', (request, response) => {
+  const langs = fs.readdirSync(path.resolve(__dirname, 'src', 'languages'));
 
+  response.end(langs);
+});
+
+app.use(express.static(__dirname + '/dev'));
+app.use('/dist', express.static('dist'));
+app.use('/codemirror', express.static('node_modules/codemirror'));
 
 app.listen(8000);
