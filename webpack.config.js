@@ -124,7 +124,7 @@ configs.push(clientConfig);
 
 // language bundles
 const langs = fs.readdirSync(path.resolve(__dirname, 'src', 'languages'));
-for (const lang of langs) {
+for (const lang of ['basic']) {
   const dir = path.resolve(__dirname, 'src', 'languages', lang);
   if (fs.statSync(dir).isDirectory()) {
     configs.push(createConfig(lang, path.join(dir, 'index.js')));

@@ -41,9 +41,11 @@ app.get('/data/web_project/:id/:fileName?', (request, response) => {
 });
 
 app.get('/data/languages', (request, response) => {
-  const langs = fs.readdirSync(path.resolve(__dirname, 'src', 'languages'));
+  const langs = require('fs').readdirSync(
+    require('path').resolve(__dirname, 'src', 'languages'),
+  );
 
-  response.end(langs);
+  response.json(langs);
 });
 
 app.use(express.static(__dirname + '/dev'));

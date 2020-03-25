@@ -160,6 +160,7 @@ class Replbox extends EventEmitter {
       this._reject = reject;
 
       if (this._useIframe) {
+        debugger;
         this._stuffContext.emit('evaluate', {
           code,
           infiniteLoopProtection,

@@ -1,32 +1,43 @@
-const Basic = require('../../../vendor/pg-basic.js');
-const Messenger = require('../../shared/messenger');
-const Display = require('./display');
+const Basic = require("../../../vendor/pg-basic.js");
+const Messenger = require("../../shared/messenger");
+const Display = require("pg-basic-table").default;
 
-Messenger.on('evaluate', ({ code }) => {
-  const el = document.createElement('canvas');
-  el.setAttribute('id', 'basic_display');
-  el.style.height = '100%';
-  el.style.width = '100%';
 
-  document.body.appendChild(el);
+Messenger.on("evaluate", ({ code }) => {
+  const wrapper = document.createElement("div");
+  wrapper.style.height = "100%";
+  wrapper.style.width = "100%";
+  wrapper.setAttribute("id", "basic_display");
+  document.body.appendChild(wrapper);
 
-  const grid = new Display(el, {
-    rows: 25,
-    cols: 25,
+  const columns = 50;
+  const rows = 50;
+
+  const grid = new Display({
+    wrapper,
+    rows,
+    columns,
+    defaultBg: "white",
+    borderWidth: 1,
+    borderColor: "black",
   });
 
-  grid.draw();
-
+  let inputCallback = null;
   const cnsle = {
-    write: s => {
+    write: (s) => {
       Messenger.output(s);
     },
     clear: () => {
       Messenger.output.clear();
     },
-    input: callback => {
-      // TODO Messenger.on('write)
-      setTimeout(() => callback('foo'));
+    input: (callback) => {
+      Messenger.inputEvent();
+
+      Messenger.once("write", (input) => {
+        console.log(input);
+        // remove new-line
+        callback(input.replace(/\n$/, ""));
+      });
     },
   };
 
@@ -34,9 +45,24 @@ Messenger.on('evaluate', ({ code }) => {
     console: cnsle,
     display: grid,
     debugLevel: 9999,
+    constants: {
+      LEVEL: 1,
+      PI: Math.PI,
+      COLUMNS: columns,
+      ROWS: rows,
+    }
   });
 
-  interp.run(code);
+  interp
+    .run(code)
+    .then(() => {
+      Messenger.result({ data: "" });
+    })
+    .catch((e) => {
+      Messenger.result({ error: e.toString() });
+    });
 });
 
-Messenger.ready();
+document.addEventListener('DOMContentLoaded', function(){ 
+  Messenger.ready();
+}, false);
