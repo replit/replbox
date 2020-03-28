@@ -426,7 +426,7 @@ function () {
     value: function peek() {
       var n = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
       this.assertTokenized();
-      if (this.index >= this.tokens.length) return eof;
+      if (this.index + n >= this.tokens.length) return eof;
       return this.tokens[this.index + n];
     }
   }, {
@@ -435,22 +435,6 @@ function () {
       this.assertTokenized();
       if (this.index >= this.tokens.length) return eof;
       return this.tokens[this.index++];
-    }
-  }, {
-    key: "nextExpr",
-    value: function nextExpr() {
-      this.assertTokenized();
-      var expr = [];
-
-      while (this.index !== this.tokens.length) {
-        if (!Tokenizer.expressionTypes.includes(this.peek().type)) {
-          break;
-        }
-
-        expr.push(this.next());
-      }
-
-      return expr;
     }
   }, {
     key: "tokenize",
@@ -1260,10 +1244,71 @@ var exprToJS = require('./expr');
 var _require2 = require('./errors'),
     ParseError = _require2.ParseError;
 
+var bracketMatchers = {
+  closers: {
+    ')': '(',
+    ']': '['
+  },
+  openers: {
+    '(': ')',
+    '[': ']'
+  }
+};
+
 var Parser =
 /*#__PURE__*/
 function () {
   _createClass(Parser, null, [{
+    key: "checkBrackets",
+    value: function checkBrackets(tokenizer, lineno) {
+      // Checks if brackets are matching properly
+      // this is used as a pre-parse step to keep 
+      // the parser simple and stateless.
+      var bracketStack = [];
+      var token;
+      var index = tokenizer.index;
+
+      while ((token = tokenizer.peek(index)) !== Tokenizer.eof) {
+        index++;
+
+        if (token.type !== 'operation') {
+          continue;
+        }
+
+        var bracket = token.lexeme;
+
+        if (bracketMatchers.openers[bracket]) {
+          // we found an opener, push it on top of the stack
+          bracketStack.push(bracket);
+          continue;
+        }
+
+        var expectedOpener = bracketMatchers.closers[bracket];
+
+        if (!expectedOpener) {
+          // not a bracket
+          continue;
+        }
+
+        var opener = bracketStack.pop();
+
+        if (expectedOpener === opener) {
+          // we got a legit match!
+          continue;
+        }
+
+        if (!opener) {
+          throw new ParseError(lineno, "Found extra closing bracket ".concat(bracket));
+        }
+
+        throw new ParseError(lineno, "Unexpected bracket ".concat(bracket, ". There is an unmatched ").concat(opener, " so it is expected to see ").concat(bracketMatchers.openers[opener], " before ").concat(bracket));
+      }
+
+      if (bracketStack.length > 0) {
+        throw new ParseError(lineno, "You have unmatched brackets. Make sure your brackets are balanced");
+      }
+    }
+  }, {
     key: "parseLine",
     value: function parseLine(line) {
       var t = new Tokenizer(line);
@@ -1278,6 +1323,7 @@ function () {
 
     this.tokenizer = tokenizer;
     this.lineno = this.getLineNo(this.tokenizer.next());
+    Parser.checkBrackets(tokenizer, this.lineno);
   }
 
   _createClass(Parser, [{
@@ -1288,24 +1334,32 @@ function () {
 
       switch (top.lexeme) {
         case 'PRINT':
-          return new PRINT(this.lineno, this.expectExpr(), this.acceptLineMod());
+          return new PRINT(this.lineno, this.expectExpr({
+            errStr: 'Expected value after PRINT'
+          }), !!this.acceptLineMod());
 
         case 'LET':
           {
             var variable = this.expectVariable();
             this.expectOperation('=');
-            return new LET(this.lineno, variable, this.expectExpr());
+            return new LET(this.lineno, variable, this.expectExpr({
+              errStr: 'Expected value after LET statement'
+            }));
           }
 
         case 'REM':
           return new REM(this.lineno, this.expectComment());
 
         case 'PAUSE':
-          return new PAUSE(this.lineno, this.expectExpr());
+          return new PAUSE(this.lineno, this.expectExpr({
+            errStr: 'Expected value after PAUSE'
+          }));
 
         case 'INPUT':
           {
-            var expr = this.expectExpr();
+            var expr = this.expectExpr({
+              errStr: 'Expected prompt text after INPUT'
+            });
             this.expectLineMod();
             return new INPUT(this.lineno, expr, this.expectVariable());
           }
@@ -1315,10 +1369,16 @@ function () {
             var _variable = this.expectVariable();
 
             this.expectOperation('=');
-            var frm = this.expectExpr();
+            var frm = this.expectExpr({
+              errStr: 'Expected value assigned to FOR variable'
+            });
             this.expectKeyword('TO');
-            var to = this.expectExpr();
-            var step = this.acceptKeyword('STEP') ? this.expectExpr() : null;
+            var to = this.expectExpr({
+              errStr: 'Expected value after TO'
+            });
+            var step = this.acceptKeyword('STEP') ? this.expectExpr({
+              errStr: 'Expected value after STEP'
+            }) : null;
             return new FOR(this.lineno, _variable, frm, to, step);
           }
 
@@ -1326,13 +1386,17 @@ function () {
           return new NEXT(this.lineno, this.expectVariable());
 
         case 'GOTO':
-          return new GOTO(this.lineno, this.expectExpr());
+          return new GOTO(this.lineno, this.expectExpr({
+            errStr: 'Expected a value after GOTO'
+          }));
 
         case 'END':
           return new END(this.lineno);
 
         case 'IF':
-          var cond = this.expectExpr();
+          var cond = this.expectExpr({
+            errStr: 'Expected a condition after IF'
+          });
           this.expectKeyword('THEN');
           var then; // Shortcut: number is interpreted as goto statement.
 
@@ -1344,7 +1408,7 @@ function () {
 
           var elze = null;
 
-          if (this.acceptKeyword('else')) {
+          if (this.acceptKeyword('ELSE')) {
             if (this.tokenizer.peek().type === 'number') {
               elze = new GOTO(this.lineno, this.expectExpr());
             } else {
@@ -1355,7 +1419,9 @@ function () {
           return new IF(this.lineno, cond, then, elze);
 
         case 'GOSUB':
-          return new GOSUB(this.lineno, this.expectExpr());
+          return new GOSUB(this.lineno, this.expectExpr({
+            errStr: 'Expected an expression after GOSUB'
+          }));
 
         case 'RETURN':
           return new RETURN(this.lineno);
@@ -1364,11 +1430,19 @@ function () {
           return new ARRAY(this.lineno, this.expectVariable());
 
         case 'PLOT':
-          var x = this.expectExpr(true);
+          var x = this.expectExpr({
+            stopOnComma: true,
+            errStr: 'Expected a value for the X axis after PLOT'
+          });
           this.expectOperation(',');
-          var y = this.expectExpr(true);
+          var y = this.expectExpr({
+            stopOnComma: true
+          });
           this.expectOperation(',');
-          var color = this.expectExpr(true);
+          var color = this.expectExpr({
+            stopOnComma: true,
+            errStr: 'Expected a value for color after PLOT X, Y,'
+          });
           return new PLOT(this.lineno, x, y, color);
 
         case 'CLS':
@@ -1386,7 +1460,13 @@ function () {
   }, {
     key: "acceptKeyword",
     value: function acceptKeyword(keyword) {
-      if (this.tokenizer.peek().type === 'keyword') {
+      var t = this.tokenizer.peek();
+
+      if (t.type === 'keyword') {
+        if (t.lexeme !== keyword) {
+          throw new ParseError(this.lineno, "Expected ".concat(keyword, " got ").concat(t.lexeme));
+        }
+
         return this.tokenizer.next();
       }
 
@@ -1398,7 +1478,9 @@ function () {
       var t = this.acceptKeyword(keyword);
 
       if (t == null) {
-        throw new ParseError(this.lineno, "Expected ".concat(keyword, " but got ").concat(this.tokenizer.peek().lexeme));
+        var token = this.tokenizer.peek();
+        var butGot = token.type === 'eof' ? 'end of line' : token.lexeme || token.type;
+        throw new ParseError(this.lineno, "Expected ".concat(keyword, " but got ").concat(butGot));
       }
 
       return t.lexeme;
@@ -1420,7 +1502,7 @@ function () {
     key: "expectOperation",
     value: function expectOperation(op) {
       var t = this.tokenizer.next();
-      this.assertType(t, 'operation');
+      this.assertType(t, 'operation', op);
 
       if (t.lexeme !== op) {
         throw new ParseError(this.lineno, 'Expected operation ' + op);
@@ -1438,7 +1520,12 @@ function () {
   }, {
     key: "expectExpr",
     value: function expectExpr() {
-      var stopOnComma = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref$stopOnComma = _ref.stopOnComma,
+          stopOnComma = _ref$stopOnComma === void 0 ? false : _ref$stopOnComma,
+          _ref$errStr = _ref.errStr,
+          errStr = _ref$errStr === void 0 ? 'Expected expression' : _ref$errStr;
+
       var expr = [];
       var brackets = 0;
 
@@ -1464,7 +1551,7 @@ function () {
           brackets++;
         }
 
-        if (t.lexeme === ']' || t.lexeme === ']') {
+        if (t.lexeme === ']' || t.lexeme === ')') {
           brackets--;
         } // Multiple variables in a row usually means users are trying
         // to use multi-letter variables
@@ -1478,7 +1565,7 @@ function () {
       }
 
       if (expr.length === 0) {
-        throw new ParseError(this.lineno, 'Expected expression');
+        throw new ParseError(this.lineno, errStr);
       }
 
       return exprToJS(expr);
@@ -1486,42 +1573,67 @@ function () {
   }, {
     key: "expectLineMod",
     value: function expectLineMod() {
-      if (!this.acceptLineMod()) {
-        throw new ParseError(this.lineno, 'Expected ;');
-      }
-
+      var linemod = this.acceptLineMod();
+      this.assertType(linemod || this.tokenizer.peek(), 'linemod', '";"');
       return true;
     }
   }, {
     key: "acceptLineMod",
     value: function acceptLineMod() {
       if (this.tokenizer.peek().type === 'linemod') {
-        this.tokenizer.next();
-        return true;
+        return this.tokenizer.next();
       }
 
-      return false;
+      return null;
     }
   }, {
     key: "acceptSubscript",
     value: function acceptSubscript() {
       if (this.tokenizer.peek().lexeme !== '[') return null;
       this.assertType(this.tokenizer.next(), 'operation', '[');
-      var expr = this.expectExpr();
+      var expr = this.expectExpr({
+        errStr: 'Expected expression after ['
+      });
       this.assertType(this.tokenizer.next(), 'operation', ']');
       return expr;
     }
   }, {
     key: "assertType",
     value: function assertType(token, expected) {
+      var _this = this;
+
       var value = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
-      if (token.type !== expected) {
-        throw new ParseError(this.lineno, "Expected a ".concat(expected, " but got a ").concat(token.type, " instead \uD83D\uDE15"));
-      }
+      var getAfter = function getAfter() {
+        var tokenIndex = token.type === 'eof' ? _this.tokenizer.tokens.length : _this.tokenizer.tokens.findIndex(function (t) {
+          return t === token;
+        });
+        var prevIndex = tokenIndex - 1;
+
+        if (prevIndex < 0) {
+          return '';
+        }
+
+        var prevToken = _this.tokenizer.tokens[prevIndex];
+
+        if (!prevToken.lexeme) {
+          return '';
+        }
+
+        return " after ".concat(prevToken.lexeme);
+      };
 
       if (value != null && token.lexeme !== value) {
-        throw new ParseError(this.lineno, "Expected a ".concat(value, " but got a ").concat(token.lexeme));
+        // make eof errors nicer
+        var butGot = token.type === 'eof' ? 'end of line' : token.lexeme || token.type;
+        throw new ParseError(this.lineno, "Expected a ".concat(value).concat(getAfter(), " but got a ").concat(butGot));
+      }
+
+      if (token.type !== expected) {
+        // make eof errors nicer
+        var _butGot = token.type === 'eof' ? 'end of line' : token.type;
+
+        throw new ParseError(this.lineno, "Expected a ".concat(expected).concat(getAfter(), " but got a ").concat(_butGot, " instead \uD83D\uDE15"));
       }
     }
   }, {
@@ -1564,15 +1676,7 @@ function () {
   function Basic(_ref) {
     var console = _ref.console,
         debugLevel = _ref.debugLevel,
-        display = _ref.display,
-        _ref$constants = _ref.constants,
-        constants = _ref$constants === void 0 ? {
-      PI: Math.PI,
-      LEVEL: 1
-    } : _ref$constants;
-
-    window.console.log(_ref);
-    window.console.log(constants)
+        display = _ref.display;
 
     _classCallCheck(this, Basic);
 
@@ -1588,7 +1692,10 @@ function () {
     this.stack = [];
     this.jumped = false;
     this.display = display;
-    this.constants = constants;
+    this.constants = {
+      PI: Math.PI,
+      LEVEL: 1
+    };
   }
 
   _createClass(Basic, [{
@@ -1611,34 +1718,58 @@ function () {
           reject: reject
         };
         _this.ended = false;
+        _this.program = [];
         var seen = {};
-        _this.program = program.split('\n').filter(function (l) {
+        var lines = program.split('\n').filter(function (l) {
           return l.trim() !== '';
-        }).map(function (l) {
-          try {
-            return Parser.parseLine(l);
-          } catch (e) {
-            _this.end(e);
+        });
+
+        if (lines.length === 0) {
+          return _this.end();
+        }
+
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var l = _step.value;
+            var line = void 0;
+
+            try {
+              line = Parser.parseLine(l);
+            } catch (e) {
+              return _this.end(e);
+            }
+
+            if (seen[line.lineno]) {
+              return _this.end(new ParseError(line.lineno, "Line with number ".concat(line.lineno, " repeated")));
+            }
+
+            seen[line.lineno] = true;
+
+            _this.program.push(line);
           }
-        }).sort(function (a, b) {
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return != null) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        _this.program.sort(function (a, b) {
           return a.lineno - b.lineno;
         });
 
-        if (_this.ended) {
-          return;
-        }
-
-        _this.program.forEach(function (_ref2) {
-          var lineno = _ref2.lineno;
-
-          if (seen[lineno]) {
-            return _this.end(new ParseError(lineno, "Line with number ".concat(lineno, " repeated")));
-          }
-
-          seen[lineno] = true;
-        });
-
-        if (!_this.program.length) return _this.end();
         _this.lineno = _this.program[0].lineno;
 
         _this.execute();
@@ -1649,7 +1780,9 @@ function () {
     value: function execute() {
       var _this2 = this;
 
-      while (true) {
+      this.halted = false;
+
+      for (var i = 0; i < 20; i++) {
         this.step();
         if (this.ended) return;
 
@@ -1665,17 +1798,16 @@ function () {
           this.jumped = false;
         }
 
-        if (this.delay) {
-          var delay = this.delay;
-          this.delay = null;
-          return setTimeout(function () {
-            _this2.execute();
-          }, delay);
-        }
-
         if (this.halted) {
           return;
         }
+      }
+
+      if (!this.ended) {
+        this.halt();
+        setTimeout(function () {
+          return _this2.execute();
+        });
       }
     }
   }, {
@@ -1683,8 +1815,8 @@ function () {
     value: function getCurLine() {
       var _this3 = this;
 
-      return this.program.find(function (_ref3) {
-        var lineno = _ref3.lineno;
+      return this.program.find(function (_ref2) {
+        var lineno = _ref2.lineno;
         return lineno === _this3.lineno;
       });
     }
@@ -1789,8 +1921,13 @@ function () {
   }, {
     key: "pause",
     value: function pause(millis) {
+      var _this4 = this;
+
       this.debug("pause ".concat(millis));
-      this.delay = millis;
+      this.halt();
+      setTimeout(function () {
+        return _this4.execute();
+      }, millis);
     }
   }, {
     key: "goto",
@@ -1801,11 +1938,11 @@ function () {
     }
   }, {
     key: "loopStart",
-    value: function loopStart(_ref4) {
-      var variable = _ref4.variable,
-          value = _ref4.value,
-          increment = _ref4.increment,
-          max = _ref4.max;
+    value: function loopStart(_ref3) {
+      var variable = _ref3.variable,
+          value = _ref3.value,
+          increment = _ref3.increment,
+          max = _ref3.max;
       this.debug("marking loop ".concat(variable));
       this.set(variable, value);
       var next = this.getNextLine();
@@ -1825,7 +1962,13 @@ function () {
       var loop = this.loops[name];
       loop.value += loop.increment;
       this.set(loop.variable, loop.value);
-      if (loop.value >= loop.max) return;
+
+      if (loop.increment > 0) {
+        if (loop.value >= loop.max) return;
+      } else if (loop.increment < 0) {
+        if (loop.value <= loop.max) return;
+      }
+
       this.goto(loop.lineno);
     }
   }, {
@@ -1861,8 +2004,17 @@ function () {
   }, {
     key: "plot",
     value: function plot(x, y, color) {
+      var _this5 = this;
+
       this.assertDisplay();
       this.display.plot(x, y, color);
+
+      if (typeof window !== 'undefined') {
+        this.halt();
+        requestAnimationFrame(function () {
+          return _this5.execute();
+        });
+      }
     }
   }, {
     key: "color",
@@ -1906,6 +2058,7 @@ function () {
   }, {
     key: "halt",
     value: function halt() {
+      this.debug('halted');
       this.halted = true;
     }
   }]);
