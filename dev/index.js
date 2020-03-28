@@ -135,6 +135,8 @@ $("#run").click(async () => {
 
   const replbox = await loadReplbox();
 
+  $('#stop').click(() => replbox.reset());
+  
   const resP = replbox.evaluate(cm.getValue(), {
     stdout: (str) => {
       jqconsole.Write(str, "");
