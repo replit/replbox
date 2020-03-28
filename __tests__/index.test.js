@@ -5,7 +5,6 @@ jest.setTimeout(30000);
 let server;
 let browser;
 beforeAll(async () => {
-  console.log('here')
   browser = await puppeteer.launch({
     // This means we have pre-installed chromium
     executablePath: 'chromium-browser',
@@ -14,7 +13,6 @@ beforeAll(async () => {
     // See https://github.com/GoogleChrome/puppeteer/issues/290
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
-  console.log(browser);
 });
 
 afterAll(async () => {
@@ -23,7 +21,6 @@ afterAll(async () => {
 
 let page;
 beforeEach(async () => {
-console.log(browser);
   page = await browser.newPage();
 
   await page.goto('http://localhost:5050/__tests__/index.html', {
