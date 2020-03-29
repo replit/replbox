@@ -2,6 +2,13 @@ const Basic = require('../../../vendor/pg-basic.js');
 const Messenger = require('../../shared/messenger');
 const Display = require('pg-basic-table').default;
 
+let basic;
+
+Messenger.on('reset', () => {  
+  if (basic) basic.end();
+  Messenger.resetReady();
+});
+
 Messenger.on('evaluate', ({ code }) => {
   const wrapper = document.createElement('div');
   wrapper.style.height = '100%';
@@ -40,7 +47,7 @@ Messenger.on('evaluate', ({ code }) => {
     },
   };
 
-  const interp = new Basic({
+  basic = new Basic({
     console: cnsle,
     display: grid,
     //debugLevel: 9999,
@@ -52,7 +59,7 @@ Messenger.on('evaluate', ({ code }) => {
     },
   });
 
-  interp
+  basic
     .run(code)
     .then(() => {
       Messenger.result({ data: '' });
