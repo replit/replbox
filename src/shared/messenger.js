@@ -117,6 +117,15 @@ if (typeof window === 'object' && window && window.parent) {
     });
   });
 
+  window.parent.stuffOn('stop', () => {
+    messengerEmit('stop');
+
+    Sentry.addBreadcrumb({
+      message: 'stop',
+      category: 'replbox',
+    });
+  });
+
   window.parent.stuffOn('overridePrompt', () => {
     messengerEmit('overridePrompt');
   });

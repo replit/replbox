@@ -121,11 +121,19 @@ function startPrompt() {
 }
 
 startPrompt();
+let replbox;
 
-$("#run").click(async () => {
+$("#language").change(() => {
+  // hard reset
   while (iframeParent.firstChild) {
     iframeParent.removeChild(iframeParent.firstChild);
   }
+  replbox = null;
+});
+
+$("#run").click(async () => {
+  if (replbox) await replbox.reset();
+  if (!replbox) replbox = await loadReplbox();
 
   jqconsole.Clear();
 
@@ -133,10 +141,8 @@ $("#run").click(async () => {
     jqconsole.AbortPrompt();
   }
 
-  const replbox = await loadReplbox();
+  $('#stop').click(() => replbox.stop());
 
-  $('#stop').click(() => replbox.reset());
-  
   const resP = replbox.evaluate(cm.getValue(), {
     stdout: (str) => {
       jqconsole.Write(str, "");

@@ -5,12 +5,11 @@ const Messenger = require('../../shared/messenger');
 let halted = false;
 const Skulpt = window.Sk;
 
-Messenger.on('reset', () => {
+Messenger.on('stop', () => {
   Sk.execLimit = 1;
   halted = true;
   Sk.timeoutMsg = function() {
-    Skulpt.execLimit = Number.MAX_VALUE;
-    Messenger.resetReady();
+    Skulpt.execLimit = Number.MAX_VALUE;    
     return 'Stopped by user';
   }
 });

@@ -22,6 +22,9 @@ const selfReset = [
   'javascript',
   'babel',
   'roy',
+];
+
+const hasStop = [
   'basic',
   'python_turtle'
 ];
@@ -236,6 +239,14 @@ class Replbox extends EventEmitter {
       };
       this._stuffContext.emit('reset');
     });
+  }
+
+  stop() {
+    if (hasStop.includes(this._language)) {
+      this._stuffContext.emit('stop');
+    } else {
+      this.reset();
+    }
   }
 
   reset() {
