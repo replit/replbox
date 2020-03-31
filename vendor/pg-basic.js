@@ -993,7 +993,7 @@ function (_Node12) {
     value: function run(context) {
       if (context.evaluate(this.condition)) {
         this.then.run(context);
-      } else if (this.other) {
+      } else if (this.elze) {
         this.elze.run(context);
       }
     }
@@ -1862,7 +1862,9 @@ function () {
       try {
         return this.context.evaluate(code);
       } catch (e) {
-        console.error('Error evaluating code:', code);
+        // This is a terrible experience and should basically never
+        // happen.
+        this.end(new RuntimeError(this.lineno, "Error evaluating ".concat(code)));
         throw e;
       }
     }
