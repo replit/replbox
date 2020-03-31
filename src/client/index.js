@@ -14,13 +14,19 @@ const createStuff = (el, origin) =>
     });
   });
 
-const webLanguages = [
+// Languages that implement their own reset function.
+const selfReset = [
   'html',
   'web_project',
   'coffeescript',
   'javascript',
   'babel',
   'roy',
+];
+
+const hasStop = [
+  'basic',
+  'python_turtle'
 ];
 
 class Replbox extends EventEmitter {
@@ -136,8 +142,8 @@ class Replbox extends EventEmitter {
   }
 
   runProject(files, { stdout, stderr, infiniteLoopProtection, replId, url }) {
-    this._stdout = stdout || function() {};
-    this._stderr = stderr || function() {};
+    this._stdout = stdout || function() { };
+    this._stderr = stderr || function() { };
 
     return new Promise((resolve, reject) => {
       this._stuffContext.emit('runProject', {
@@ -155,12 +161,11 @@ class Replbox extends EventEmitter {
 
   evaluate(code, { stdout, stderr, infiniteLoopProtection }) {
     return new Promise((resolve, reject) => {
-      this._stdout = stdout || function() {};
-      this._stderr = stderr || function() {};
+      this._stdout = stdout || function() { };
+      this._stderr = stderr || function() { };
       this._reject = reject;
 
       if (this._useIframe) {
-        debugger;
         this._stuffContext.emit('evaluate', {
           code,
           infiniteLoopProtection,
@@ -236,8 +241,16 @@ class Replbox extends EventEmitter {
     });
   }
 
+  stop() {
+    if (hasStop.includes(this._language)) {
+      this._stuffContext.emit('stop');
+    } else {
+      this.reset();
+    }
+  }
+
   reset() {
-    if (webLanguages.includes(this._language)) {
+    if (selfReset.includes(this._language)) {
       return this._resetWeb();
     }
 

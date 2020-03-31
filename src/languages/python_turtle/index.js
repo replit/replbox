@@ -2,7 +2,17 @@ require('../../../vendor/skulpt.min.js');
 const files = require('./files.json');
 const Messenger = require('../../shared/messenger');
 
+let halted = false;
 const Skulpt = window.Sk;
+
+Messenger.on('stop', () => {
+  Sk.execLimit = 1;
+  halted = true;
+  Sk.timeoutMsg = function() {
+    Skulpt.execLimit = Number.MAX_VALUE;    
+    return 'Stopped by user';
+  }
+});
 
 Messenger.on('evaluate', ({ code }) => {
   const el = document.createElement('div');
@@ -52,7 +62,6 @@ Messenger.on('evaluate', ({ code }) => {
     }
   };
 
-  let halted = false;
   function resetLimit() {
     if (halted) {
       return;
