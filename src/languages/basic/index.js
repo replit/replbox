@@ -4,7 +4,7 @@ const Display = require('pg-basic-table').default;
 
 let basic;
 
-Messenger.on('stop', () => {  
+Messenger.on('stop', () => {
   if (basic) basic.end();
 });
 
