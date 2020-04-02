@@ -59,15 +59,16 @@ Messenger.on('evaluate', ({ code }) => {
     },
   });
 
+  // Focus after run. Added delay to make sure everything is rendered
+  // and program is running; janky but no good hooks right now. 
   setTimeout(() => {
-    console.log('focus')
     wrapper.focus();
-  }, 100);
+  }, 50);
+
   basic
     .run(code)
     .then(() => {
       Messenger.result({ data: '' });
-      wrapper.focus();
     })
     .catch(e => {
       Messenger.result({ error: e.toString() });
