@@ -13,6 +13,7 @@ Messenger.on('evaluate', ({ code }) => {
   wrapper.style.height = '100%';
   wrapper.style.width = '100%';
   wrapper.setAttribute('id', 'basic_display');
+  wrapper.setAttribute('tabindex', '0');
   document.body.appendChild(wrapper);
 
   const columns = 50;
@@ -58,10 +59,15 @@ Messenger.on('evaluate', ({ code }) => {
     },
   });
 
+  setTimeout(() => {
+    console.log('focus')
+    wrapper.focus();
+  }, 100);
   basic
     .run(code)
     .then(() => {
       Messenger.result({ data: '' });
+      wrapper.focus();
     })
     .catch(e => {
       Messenger.result({ error: e.toString() });
