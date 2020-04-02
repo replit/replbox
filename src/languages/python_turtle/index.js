@@ -9,9 +9,9 @@ Messenger.on('stop', () => {
   Sk.execLimit = 1;
   halted = true;
   Sk.timeoutMsg = function() {
-    Skulpt.execLimit = Number.MAX_VALUE;    
+    Skulpt.execLimit = Number.MAX_VALUE;
     return 'Stopped by user';
-  }
+  };
 });
 
 Messenger.on('evaluate', ({ code }) => {

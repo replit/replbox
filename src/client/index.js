@@ -24,10 +24,7 @@ const selfReset = [
   'roy',
 ];
 
-const hasStop = [
-  'basic',
-  'python_turtle'
-];
+const hasStop = ['basic', 'python_turtle'];
 
 class Replbox extends EventEmitter {
   constructor(
@@ -142,8 +139,8 @@ class Replbox extends EventEmitter {
   }
 
   runProject(files, { stdout, stderr, infiniteLoopProtection, replId, url }) {
-    this._stdout = stdout || function() { };
-    this._stderr = stderr || function() { };
+    this._stdout = stdout || function() {};
+    this._stderr = stderr || function() {};
 
     return new Promise((resolve, reject) => {
       this._stuffContext.emit('runProject', {
@@ -161,8 +158,8 @@ class Replbox extends EventEmitter {
 
   evaluate(code, { stdout, stderr, infiniteLoopProtection }) {
     return new Promise((resolve, reject) => {
-      this._stdout = stdout || function() { };
-      this._stderr = stderr || function() { };
+      this._stdout = stdout || function() {};
+      this._stderr = stderr || function() {};
       this._reject = reject;
 
       if (this._useIframe) {
