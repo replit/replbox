@@ -1,6 +1,6 @@
 const Basic = require('../../../vendor/pg-basic.js');
 const Messenger = require('../../shared/messenger');
-const Display = require('pg-basic-table').default;
+const Display = require('./display');
 
 let basic;
 
