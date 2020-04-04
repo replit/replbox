@@ -40,7 +40,7 @@
     "jasmine-core": "^2.4.1",
     "jasmine_dom_matchers": "^1.4.0",
     "jest": "^24.9.0",
-    "pg-basic-table": "^1.0.1",
+    "pg-basic-table": "^1.0.3",
     "prettier": "^1.18.2",
     "puppeteer": "^1.11.0",
     "script-loader": "0.7.0",
