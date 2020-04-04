@@ -1,6 +1,6 @@
 const Basic = require('../../../vendor/pg-basic.js');
 const Messenger = require('../../shared/messenger');
-const Display = require('pg-basic-table').default;
+const Display = require('./display');
 
 let basic;
 
@@ -13,6 +13,7 @@ Messenger.on('evaluate', ({ code }) => {
   wrapper.style.height = '100%';
   wrapper.style.width = '100%';
   wrapper.setAttribute('id', 'basic_display');
+  wrapper.setAttribute('tabindex', '0');
   document.body.appendChild(wrapper);
 
   const columns = 50;
@@ -57,6 +58,12 @@ Messenger.on('evaluate', ({ code }) => {
       ROWS: rows,
     },
   });
+
+  // Focus after run. Added delay to make sure everything is rendered
+  // and program is running; janky but no good hooks right now. 
+  setTimeout(() => {
+    wrapper.focus();
+  }, 50);
 
   basic
     .run(code)
