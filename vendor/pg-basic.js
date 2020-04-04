@@ -369,14 +369,14 @@ function () {
 }();
 
 var eof = new Token('eof', '');
-var KEYWORDS = ['IF', 'THEN', 'ELSE', 'FOR', 'ON', 'TO', 'STEP', 'GOTO', 'GOSUB', 'RETURN', 'NEXT', 'INPUT', 'LET', 'CLC', 'CLT', 'CLS', 'END', 'PRINT', 'PLOT', 'DRAW', 'UNDRAW', 'ARRAY', 'DIM', 'DATA', 'READ', 'REM', 'PAUSE', 'STOP'];
+var KEYWORDS = ['IF', 'THEN', 'ELSE', 'FOR', 'ON', 'TO', 'STEP', 'GOTO', 'GOSUB', 'RETURN', 'NEXT', 'INPUT', 'LET', 'CLC', 'CLT', 'CLS', 'END', 'PRINT', 'PLOT', 'TEXT', 'DRAW', 'UNDRAW', 'ARRAY', 'DIM', 'DATA', 'READ', 'REM', 'PAUSE', 'STOP'];
 var CONSTANTS = ['LEVEL', 'PI'];
 var LINE = /^\s*(\d+)\s*/;
 var QUOTE = /^"((\\.|[^"\\])*)"\s*/;
 var KEY = new RegExp('^(' + KEYWORDS.join('|') + ')\\s*', 'i');
 var FUN = new RegExp('^(' + Object.keys(Functions).join('|') + ')\\s*', 'i');
 var CONST = new RegExp('^(' + CONSTANTS.join('|') + ')\\s*', 'i');
-var VAR = /^([a-z][0-9]*)\$?\s*/i;
+var VAR = /^([a-z][\w$]*)\s*/i;
 var NUM = /^(\d+(\.\d+)?)\s*/i;
 var OP = /^(<>|>=|<=|[,\+\-\*\/%=<>\(\)\]\[])\s*/i;
 var LOGIC = /^(AND|OR)\s*/i;
@@ -435,6 +435,12 @@ function () {
       this.assertTokenized();
       if (this.index >= this.tokens.length) return eof;
       return this.tokens[this.index++];
+    }
+  }, {
+    key: "reverse",
+    value: function reverse() {
+      if (this.index === 0) return 0;
+      return --this.index;
     }
   }, {
     key: "tokenize",
@@ -592,6 +598,7 @@ function () {
   return Tokenizer;
 }();
 
+Tokenizer.Token = Token;
 module.exports = Tokenizer;
 },{"./functions":"functions.js","./errors":"errors.js"}],"nodes.js":[function(require,module,exports) {
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -950,10 +957,42 @@ function (_Node10) {
   return PLOT;
 }(Node);
 
-var END =
+var TEXT =
 /*#__PURE__*/
 function (_Node11) {
-  _inherits(END, _Node11);
+  _inherits(TEXT, _Node11);
+
+  function TEXT(lineno, x, y, text) {
+    var _this13;
+
+    var size = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '12';
+    var color = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : '"BLACK"';
+
+    _classCallCheck(this, TEXT);
+
+    _this13 = _possibleConstructorReturn(this, _getPrototypeOf(TEXT).call(this, lineno, 'TEXT'));
+    _this13.x = x;
+    _this13.y = y;
+    _this13.text = text;
+    _this13.size = size;
+    _this13.color = color;
+    return _this13;
+  }
+
+  _createClass(TEXT, [{
+    key: "run",
+    value: function run(context) {
+      context.text(context.evaluate(this.x), context.evaluate(this.y), context.evaluate(this.text), context.evaluate(this.size), context.evaluate(this.color));
+    }
+  }]);
+
+  return TEXT;
+}(Node);
+
+var END =
+/*#__PURE__*/
+function (_Node12) {
+  _inherits(END, _Node12);
 
   function END() {
     _classCallCheck(this, END);
@@ -973,19 +1012,19 @@ function (_Node11) {
 
 var IF =
 /*#__PURE__*/
-function (_Node12) {
-  _inherits(IF, _Node12);
+function (_Node13) {
+  _inherits(IF, _Node13);
 
   function IF(lineno, condition, then, elze) {
-    var _this13;
+    var _this14;
 
     _classCallCheck(this, IF);
 
-    _this13 = _possibleConstructorReturn(this, _getPrototypeOf(IF).call(this, lineno, 'IF'));
-    _this13.condition = condition;
-    _this13.then = then;
-    _this13.elze = elze;
-    return _this13;
+    _this14 = _possibleConstructorReturn(this, _getPrototypeOf(IF).call(this, lineno, 'IF'));
+    _this14.condition = condition;
+    _this14.then = then;
+    _this14.elze = elze;
+    return _this14;
   }
 
   _createClass(IF, [{
@@ -1004,17 +1043,17 @@ function (_Node12) {
 
 var GOSUB =
 /*#__PURE__*/
-function (_Node13) {
-  _inherits(GOSUB, _Node13);
+function (_Node14) {
+  _inherits(GOSUB, _Node14);
 
   function GOSUB(lineno, expr) {
-    var _this14;
+    var _this15;
 
     _classCallCheck(this, GOSUB);
 
-    _this14 = _possibleConstructorReturn(this, _getPrototypeOf(GOSUB).call(this, lineno, 'GOSUB'));
-    _this14.expr = expr;
-    return _this14;
+    _this15 = _possibleConstructorReturn(this, _getPrototypeOf(GOSUB).call(this, lineno, 'GOSUB'));
+    _this15.expr = expr;
+    return _this15;
   }
 
   _createClass(GOSUB, [{
@@ -1031,8 +1070,8 @@ function (_Node13) {
 
 var RETURN =
 /*#__PURE__*/
-function (_Node14) {
-  _inherits(RETURN, _Node14);
+function (_Node15) {
+  _inherits(RETURN, _Node15);
 
   function RETURN() {
     _classCallCheck(this, RETURN);
@@ -1052,17 +1091,17 @@ function (_Node14) {
 
 var ARRAY =
 /*#__PURE__*/
-function (_Node15) {
-  _inherits(ARRAY, _Node15);
+function (_Node16) {
+  _inherits(ARRAY, _Node16);
 
   function ARRAY(lineno, variable) {
-    var _this15;
+    var _this16;
 
     _classCallCheck(this, ARRAY);
 
-    _this15 = _possibleConstructorReturn(this, _getPrototypeOf(ARRAY).call(this, lineno, 'ARRAY'));
-    _this15.variable = variable;
-    return _this15;
+    _this16 = _possibleConstructorReturn(this, _getPrototypeOf(ARRAY).call(this, lineno, 'ARRAY'));
+    _this16.variable = variable;
+    return _this16;
   }
 
   _createClass(ARRAY, [{
@@ -1077,8 +1116,8 @@ function (_Node15) {
 
 var CLS =
 /*#__PURE__*/
-function (_Node16) {
-  _inherits(CLS, _Node16);
+function (_Node17) {
+  _inherits(CLS, _Node17);
 
   function CLS() {
     _classCallCheck(this, CLS);
@@ -1098,8 +1137,8 @@ function (_Node16) {
 
 var CLT =
 /*#__PURE__*/
-function (_Node17) {
-  _inherits(CLT, _Node17);
+function (_Node18) {
+  _inherits(CLT, _Node18);
 
   function CLT() {
     _classCallCheck(this, CLT);
@@ -1119,8 +1158,8 @@ function (_Node17) {
 
 var CLC =
 /*#__PURE__*/
-function (_Node18) {
-  _inherits(CLC, _Node18);
+function (_Node19) {
+  _inherits(CLC, _Node19);
 
   function CLC() {
     _classCallCheck(this, CLC);
@@ -1157,6 +1196,7 @@ module.exports = {
   CLS: CLS,
   CLT: CLT,
   CLC: CLC,
+  TEXT: TEXT,
   Variable: Variable
 };
 },{"./errors":"errors.js"}],"expr.js":[function(require,module,exports) {
@@ -1237,6 +1277,7 @@ var _require = require('./nodes'),
     CLS = _require.CLS,
     CLC = _require.CLC,
     CLT = _require.CLT,
+    TEXT = _require.TEXT,
     Variable = _require.Variable;
 
 var exprToJS = require('./expr');
@@ -1329,7 +1370,13 @@ function () {
   _createClass(Parser, [{
     key: "parse",
     value: function parse() {
-      var top = this.tokenizer.next();
+      var top = this.tokenizer.next(); // If top is a variable we assume it's an assignment shorthand `x = 1`
+
+      if (top.type !== 'keyword' && top.type === 'variable') {
+        this.tokenizer.reverse();
+        top = new Tokenizer.Token('keyword', 'LET');
+      }
+
       this.assertType(top, 'keyword');
 
       switch (top.lexeme) {
@@ -1444,6 +1491,47 @@ function () {
             errStr: 'Expected a value for color after PLOT X, Y,'
           });
           return new PLOT(this.lineno, x, y, color);
+
+        case 'TEXT':
+          {
+            var _x = this.expectExpr({
+              stopOnComma: true,
+              errStr: 'Expected a value for the X axis for TEXT'
+            });
+
+            this.expectOperation(',');
+
+            var _y = this.expectExpr({
+              stopOnComma: true,
+              errStr: 'Expected a value for Y axis for TEXT'
+            });
+
+            this.expectOperation(',');
+            var text = this.expectExpr({
+              stopOnComma: true,
+              errStr: 'Expected a text value for TEXT'
+            });
+
+            var size, _color;
+
+            if (this.tokenizer.peek() !== Tokenizer.eof) {
+              this.expectOperation(',');
+              size = this.expectExpr({
+                stopOnComma: true,
+                errStr: 'Expected a value for size for TEXT'
+              });
+
+              if (this.tokenizer.peek() !== Tokenizer.eof) {
+                this.expectOperation(',');
+                _color = this.expectExpr({
+                  stopOnComma: true,
+                  errStr: 'Expected a value for color for TEXT'
+                });
+              }
+            }
+
+            return new TEXT(this.lineno, _x, _y, text, size, _color);
+          }
 
         case 'CLS':
           return new CLS(this.lineno);
@@ -1780,6 +1868,7 @@ function () {
     value: function execute() {
       var _this2 = this;
 
+      if (this.ended) return;
       this.halted = false;
 
       for (var i = 0; i < 20; i++) {
@@ -1962,6 +2051,11 @@ function () {
     value: function loopJump(name) {
       this.debug("jumping to loop ".concat(name));
       var loop = this.loops[name];
+
+      if (!loop) {
+        return this.end(new RuntimeError(this.lineno, 'No loop to return from. Did you forget to write a for?'));
+      }
+
       loop.value += loop.increment;
       this.set(loop.variable, loop.value);
 
@@ -2015,6 +2109,21 @@ function () {
         this.halt();
         requestAnimationFrame(function () {
           return _this5.execute();
+        });
+      }
+    }
+  }, {
+    key: "text",
+    value: function text(x, y, _text, size, color) {
+      var _this6 = this;
+
+      this.assertDisplay();
+      this.display.text(x, y, _text, size, color);
+
+      if (typeof window !== 'undefined') {
+        this.halt();
+        requestAnimationFrame(function () {
+          return _this6.execute();
         });
       }
     }
