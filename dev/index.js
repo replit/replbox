@@ -2,6 +2,7 @@ $.get('/data/languages').then(r => {
   r.forEach(lang => {
     $('#language').append(`<option value="${lang}">${lang}</option>`);
   });
+  $('#language').val('basic')
 });
 
 let cm = CodeMirror($('#editor').get(0), {

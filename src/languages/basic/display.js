@@ -1,11 +1,11 @@
 function toPx(n) {
   return `${n}px`;
 }
-function getPixelSize({ wrapper, columns, rows, borderWidth, }) {
+function getPixelSize({ wrapper, columns, rows, borderWidth, }) {  
   const wrapperSize = Math.min(wrapper.clientWidth, wrapper.clientHeight);
   const gridSize = Math.max(columns, rows);
   const totalBorderSize = gridSize * borderWidth + 2;
-  return (wrapperSize - totalBorderSize) / gridSize;
+  return Math.floor((wrapperSize - totalBorderSize) / gridSize);
 }
 function observePixelSize(opts) {
   // @ts-ignore not implemented in current ts dom
