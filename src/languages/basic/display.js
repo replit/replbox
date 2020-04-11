@@ -1,7 +1,7 @@
 function toPx(n) {
   return `${n}px`;
 }
-function getPixelSize({ wrapper, columns, rows, borderWidth, }) {  
+function getPixelSize({ wrapper, columns, rows, borderWidth, }) {
   const wrapperSize = Math.min(wrapper.clientWidth, wrapper.clientHeight);
   const gridSize = Math.max(columns, rows);
   const totalBorderSize = gridSize * borderWidth + 2;
@@ -165,5 +165,14 @@ module.exports = class TableDisplay {
     el.style.top = (y / this.columns * 100) + '%';
     this.grid.parentElement.appendChild(el);
     this.texts[`${x}:${y}`] = el;
+  }
+  draw(table) {
+    console.log(table)
+    for (let i in table) {
+      for (let j in table[i]) {
+        console.log(i, j, table[i][j])
+        this.plot(i, j, table[i][j]);
+      }
+    }
   }
 }

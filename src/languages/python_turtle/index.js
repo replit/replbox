@@ -128,6 +128,9 @@ Messenger.on('evaluate', ({ code }) => {
     center();
   }, 300);
 
+  // Focus on the turtle target so that if the user can send it
+  // keypress action.
+  setTimeout(() => el.focus(), 100);
   try {
     Skulpt.misceval
       .asyncToPromise(() =>
@@ -137,10 +140,6 @@ Messenger.on('evaluate', ({ code }) => {
         () => {
           halted = true;
           Messenger.result({ data: '' });
-
-          // Focus on the turtle target so that if the user can send it
-          // keypress action.
-          setTimeout(() => el.focus(), 200);
         },
         err => {
           halted = true;
