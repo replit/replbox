@@ -5,7 +5,7 @@ function getPixelSize({ wrapper, columns, rows, borderWidth, }) {
   const wrapperSize = Math.min(wrapper.clientWidth, wrapper.clientHeight);
   const gridSize = Math.max(columns, rows);
   const totalBorderSize = gridSize * borderWidth + 2;
-  return (wrapperSize - totalBorderSize) / gridSize;
+  return Math.floor((wrapperSize - totalBorderSize) / gridSize);
 }
 function observePixelSize(opts) {
   // @ts-ignore not implemented in current ts dom
@@ -165,5 +165,12 @@ module.exports = class TableDisplay {
     el.style.top = (y / this.columns * 100) + '%';
     this.grid.parentElement.appendChild(el);
     this.texts[`${x}:${y}`] = el;
+  }
+  draw(table) {
+    for (let i in table) {
+      for (let j in table[i]) {
+        this.plot(i, j, table[i][j]);
+      }
+    }
   }
 }

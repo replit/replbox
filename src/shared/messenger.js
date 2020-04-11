@@ -358,7 +358,15 @@ if (iframe) {
       box-sizing: border-box;
     }
     #skulpt_target:focus {
-      border: 1px solid blue;
+      border: 1px solid #6d7ebd;
+    }
+    #basic_display {
+      display: flex;
+      justify-content: center;
+      align-items: center;      
+    }
+    #basic_display:focus table {
+      box-shadow: 0px 0px 13px 6px rgba(0,0,0,0.42);
     }
   `;
 

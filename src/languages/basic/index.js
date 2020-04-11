@@ -8,7 +8,7 @@ Messenger.on('stop', () => {
   if (basic) basic.end();
 });
 
-Messenger.on('evaluate', ({ code }) => {
+Messenger.on('evaluate', ({ code }) => {  
   const wrapper = document.createElement('div');
   wrapper.style.height = '100%';
   wrapper.style.width = '100%';
