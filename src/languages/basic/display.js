@@ -167,10 +167,8 @@ module.exports = class TableDisplay {
     this.texts[`${x}:${y}`] = el;
   }
   draw(table) {
-    console.log(table)
     for (let i in table) {
       for (let j in table[i]) {
-        console.log(i, j, table[i][j])
         this.plot(i, j, table[i][j]);
       }
     }
