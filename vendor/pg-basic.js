@@ -2231,14 +2231,16 @@ function () {
           return _this5.execute();
         });
       }
-    }
+    } // This doesn't yield (flush) to keep graphics fast, users need to
+    // use pause to create an animation effect.
+
   }, {
     key: "plot",
     value: function plot(x, y, color) {
       this.assertDisplay();
       this.display.plot(x, y, color);
-      this.yield();
-    }
+    } // This yields (flush) since it's meant to update an entire "scene"
+
   }, {
     key: "draw",
     value: function draw(array) {
