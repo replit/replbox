@@ -50,7 +50,7 @@ Messenger.on('evaluate', ({ code }) => {
   basic = new Basic({
     console: cnsle,
     display: grid,
-    //debugLevel: 9999,
+    // debugLevel: 9999,
     constants: {
       LEVEL: 1,
       PI: Math.PI,

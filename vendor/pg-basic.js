@@ -1866,6 +1866,7 @@ var _require = require('./errors'),
     RuntimeError = _require.RuntimeError;
 
 var MAX_STEPS = 2500;
+var raf = typeof window !== 'undefined' ? requestAnimationFrame : setImmediate;
 
 var Basic =
 /*#__PURE__*/
@@ -2225,12 +2226,15 @@ function () {
     value: function _yield() {
       var _this5 = this;
 
-      if (typeof window !== 'undefined') {
-        this.halt();
-        requestAnimationFrame(function () {
-          return _this5.execute();
-        });
+      if (this.halted) {
+        // We already halted (probably two consequetive prints).
+        return;
       }
+
+      this.halt();
+      raf(function () {
+        return _this5.execute();
+      });
     } // This doesn't yield (flush) to keep graphics fast, users need to
     // use pause to create an animation effect.
 
@@ -2306,6 +2310,11 @@ function () {
   }, {
     key: "halt",
     value: function halt() {
+      if (this.halted) {
+        // Should never happen.
+        throw new Error('Basic already in halted state');
+      }
+
       this.debug('halted');
       this.halted = true;
     }
