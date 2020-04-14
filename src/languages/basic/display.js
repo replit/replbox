@@ -86,24 +86,22 @@ module.exports = class TableDisplay {
     this.columns = columns;
     this.defaultBg = defaultBg;
     this.keyQueue = [];
+    this.clickQueue = [];
     this.pressedKey = undefined;
     this.texts = {};
     this.initKeyQueuing();
   }
   initKeyQueuing() {
     const getKey = (e) => e.key || String.fromCharCode(e.keyCode);
-    window.addEventListener("keydown", (e) => {
-      const key = getKey(e);
-      if (key === this.pressedKey) {
-        return;
-      }
-      this.pressedKey = key;
-      this.keyQueue.push(key);
+    window.addEventListener("keypress", (e) => {
+      this.keyQueue.push(getKey(e));
     });
-    window.addEventListener("keyup", (e) => {
-      if (getKey(e) === this.pressedKey) {
-        this.pressedKey = undefined;
-      }
+    this.grid.addEventListener("click", (e) => {
+      if (e.target.nodeName !== 'TD') return;
+      this.clickQueue.push([
+        e.target.cellIndex,
+        e.target.parentNode.rowIndex,
+      ])
     });
   }
   isInside(x, y) {
@@ -152,7 +150,10 @@ module.exports = class TableDisplay {
     }
   }
   getChar() {
-    return this.keyQueue.shift() || this.pressedKey;
+    return this.keyQueue.shift();
+  }
+  getClick() {
+    return this.clickQueue.shift();
   }
   text(x, y, text, size = 12, color = "black") {
     const el = document.createElement('span');

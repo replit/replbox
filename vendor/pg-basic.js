@@ -244,6 +244,10 @@ var Functions = {
     // This is just a stub. This gets injected.
     throw new Error('Unimplemented');
   },
+  GETCLICK: function GETCLICK() {
+    // This is just a stub. This gets injected.
+    throw new Error('Unimplemented');
+  },
   UPPERCASE: function UPPERCASE(str) {
     return str.toUpperCase();
   },
@@ -2114,6 +2118,9 @@ function () {
 
         case 'getchar':
           return this.getChar.bind(this);
+
+        case 'getclick':
+          return this.getClick.bind(this);
       } // Internal utils
 
 
@@ -2301,6 +2308,17 @@ function () {
     value: function getChar() {
       this.assertDisplay();
       return this.display.getChar() || '';
+    }
+  }, {
+    key: "getClick",
+    value: function getClick() {
+      this.assertDisplay();
+      var click = this.display.getClick();
+      if (!click) return '';
+      var arr = new BasicArray(1);
+      arr.set(0, click[0]);
+      arr.set(1, click[1]);
+      return arr;
     }
   }, {
     key: "input",
