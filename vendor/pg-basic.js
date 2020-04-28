@@ -864,9 +864,7 @@ function (_Node7) {
       var _this9 = this;
 
       var prompt = context.evaluate(this.expr);
-      context.print(prompt); // Yield.
-
-      context.yield();
+      context.write(prompt);
       context.input(function (value) {
         if (_this9.variable.array) {
           var sub = context.evaluate(_this9.variable.subscript);
@@ -2340,9 +2338,14 @@ function () {
       this.yield();
     }
   }, {
+    key: "write",
+    value: function write(s) {
+      this.console.write(s.toString());
+    }
+  }, {
     key: "print",
     value: function print(s) {
-      this.console.write(s.toString());
+      this.write(s);
       this.yield();
     }
   }, {
@@ -2378,6 +2381,7 @@ function () {
   }, {
     key: "input",
     value: function input(callback) {
+      this.halt();
       this.console.input(callback);
     }
   }, {
