@@ -253,6 +253,9 @@ var Functions = {
   },
   LOWERCASE: function LOWERCASE(str) {
     return str.toLowerCase();
+  },
+  TIME: function TIME() {
+    return Date.now();
   }
 };
 var aliases = {
@@ -383,7 +386,8 @@ var CONST = new RegExp('^(' + CONSTANTS.join('|') + ')\\s*', 'i');
 var VAR = /^([a-z][\w$]*)\s*/i;
 var NUM = /^(\d+(\.\d+)?)\s*/i;
 var OP = /^(<>|>=|<=|[,\+\-\*\/%=<>\(\)\]\[])\s*/i;
-var LOGIC = /^(AND|OR)\s*/i;
+var LOGIC = /^(AND|OR|NOT)\s*/i;
+var BOOL = /^(true|false)\s*/i;
 var LINEMOD = /^(;)\s*/i;
 
 var Tokenizer =
@@ -399,7 +403,7 @@ function () {
   }, {
     key: "expressionTypes",
     get: function get() {
-      return ['string', 'function', 'operation', 'number', 'variable', 'logic', 'constant'];
+      return ['string', 'function', 'operation', 'number', 'variable', 'logic', 'constant', 'boolean'];
     }
   }, {
     key: "eof",
@@ -409,13 +413,15 @@ function () {
   }]);
 
   function Tokenizer(stmnt) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     _classCallCheck(this, Tokenizer);
 
-    this.stmnt = stmnt;
+    this.stmnt = stmnt.trim();
     this.tokens = [];
     this.index = 0;
     this.tokenized = false;
-    this.lineno = -1;
+    this.lineno = options.lineno || -1;
   }
 
   _createClass(Tokenizer, [{
@@ -451,17 +457,14 @@ function () {
     value: function tokenize() {
       var linem = this.stmnt.match(LINE);
 
-      if (!linem) {
-        throw new ParseError(this.lineno, 'Every line must start with a line number');
+      if (linem) {
+        this.lineno = parseInt(linem[1]);
+        this.tokens.push(new Token('lineno', this.lineno));
+        this.stmnt = this.stmnt.slice(linem[0].length);
       }
 
-      this.lineno = parseInt(linem[1]); // First token is always line number.
-
-      this.tokens.push(new Token('lineno', this.lineno));
-      this.stmnt = this.stmnt.slice(linem[0].length);
-
       while (this.stmnt.length) {
-        var eaten = this.eatKeyword() || this.eatQuote() || this.eatLogic() || this.eatFunction() || this.eatConstant() || this.eatVariable() || this.eatNumber() || this.eatOperation() || this.eatLineMod();
+        var eaten = this.eatKeyword() || this.eatQuote() || this.eatLogic() || this.eatFunction() || this.eatConstant() || this.eatBoolean() || this.eatVariable() || this.eatNumber() || this.eatOperation() || this.eatLineMod();
 
         if (!eaten) {
           throw new ParseError(this.lineno, "Invalid syntax near: '".concat(this.stmnt, "'"));
@@ -525,6 +528,19 @@ function () {
       if (m && m[0]) {
         var fun = m[1].toUpperCase();
         this.tokens.push(new Token('constant', fun));
+        return m[0];
+      }
+
+      return null;
+    }
+  }, {
+    key: "eatBoolean",
+    value: function eatBoolean() {
+      var m = this.stmnt.match(BOOL);
+
+      if (m && m[0]) {
+        var bool = m[1].toUpperCase();
+        this.tokens.push(new Token('boolean', bool));
         return m[0];
       }
 
@@ -850,7 +866,7 @@ function (_Node7) {
       var prompt = context.evaluate(this.expr);
       context.print(prompt); // Yield.
 
-      context.halt();
+      context.yield();
       context.input(function (value) {
         if (_this9.variable.array) {
           var sub = context.evaluate(_this9.variable.subscript);
@@ -1263,6 +1279,11 @@ function exprToJS(expr) {
   while (expr.length) {
     var t = expr.shift();
 
+    if (t.type === 'boolean') {
+      jsExpr += t.lexeme.toLowerCase();
+      continue;
+    }
+
     if (t.type === 'variable') {
       jsExpr += '__pgb.get("' + t.lexeme + '")';
       continue;
@@ -1279,10 +1300,21 @@ function exprToJS(expr) {
     }
 
     if (t.type === 'logic') {
-      if (t.lexeme === 'AND') {
-        jsExpr += '&&';
-      } else if (t.lexeme === 'OR') {
-        jsExpr += '||';
+      switch (t.lexeme) {
+        case 'AND':
+          jsExpr += '&&';
+          break;
+
+        case 'OR':
+          jsExpr += '||';
+          break;
+
+        case 'NOT':
+          jsExpr += '!';
+          break;
+
+        default:
+          throw new Error('Unknown logic operator: ' + t.lexeme);
       }
 
       continue;
@@ -1372,7 +1404,7 @@ function () {
     key: "checkBrackets",
     value: function checkBrackets(tokenizer, lineno) {
       // Checks if brackets are matching properly
-      // this is used as a pre-parse step to keep 
+      // this is used as a pre-parse step to keep
       // the parser simple and stateless.
       var bracketStack = [];
       var token;
@@ -1421,9 +1453,11 @@ function () {
   }, {
     key: "parseLine",
     value: function parseLine(line) {
-      var t = new Tokenizer(line);
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      options.lineno = options.lineno || 1;
+      var t = new Tokenizer(line, options);
       t.tokenize();
-      var p = new Parser(t);
+      var p = new Parser(t, options);
       var parsed = p.parse();
 
       if (t.peek() !== Tokenizer.eof) {
@@ -1435,17 +1469,34 @@ function () {
   }]);
 
   function Parser(tokenizer) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     _classCallCheck(this, Parser);
 
     this.tokenizer = tokenizer;
-    this.lineno = this.getLineNo(this.tokenizer.next());
+
+    if (tokenizer.peek().type != "lineno") {
+      this.lineno = options.lineno;
+    } else {
+      this.lineno = tokenizer.next().lexeme;
+    }
+
     Parser.checkBrackets(tokenizer, this.lineno);
   }
 
   _createClass(Parser, [{
     key: "parse",
     value: function parse() {
-      var top = this.tokenizer.next(); // If top is a variable we assume it's an assignment shorthand `x = 1`
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
+        required: false
+      };
+      var top = this.tokenizer.next();
+
+      if (!options.required && top === Tokenizer.eof) {
+        // Empty lines are noop, which are equivalent to REMs
+        return new REM(this.lineno, '');
+      } // If top is a variable we assume it's an assignment shorthand `x = 1`
+
 
       if (top.type !== 'keyword' && top.type === 'variable') {
         this.tokenizer.reverse();
@@ -1525,7 +1576,9 @@ function () {
           if (this.tokenizer.peek().type === 'number') {
             then = new GOTO(this.lineno, this.expectExpr());
           } else {
-            then = this.parse();
+            then = this.parse({
+              required: true
+            });
           }
 
           var elze = null;
@@ -1534,7 +1587,9 @@ function () {
             if (this.tokenizer.peek().type === 'number') {
               elze = new GOTO(this.lineno, this.expectExpr());
             } else {
-              elze = this.parse();
+              elze = this.parse({
+                required: true
+              });
             }
           }
 
@@ -1551,7 +1606,7 @@ function () {
         case 'ARRAY':
           {
             var vari = this.expectVariable();
-            var dim = "1";
+            var dim = '1';
 
             if (this.tokenizer.peek() !== Tokenizer.eof) {
               this.expectOperation(',');
@@ -1930,6 +1985,7 @@ function () {
           return _this.end();
         }
 
+        var lineno = 0;
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
@@ -1937,10 +1993,13 @@ function () {
         try {
           for (var _iterator = lines[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
             var l = _step.value;
+            lineno++;
             var line = void 0;
 
             try {
-              line = Parser.parseLine(l);
+              line = Parser.parseLine(l, {
+                lineno: lineno
+              });
             } catch (e) {
               return _this.end(e);
             }
@@ -1967,10 +2026,6 @@ function () {
             }
           }
         }
-
-        _this.program.sort(function (a, b) {
-          return a.lineno - b.lineno;
-        });
 
         _this.lineno = _this.program[0].lineno;
 
