@@ -1,4 +1,3 @@
-require('./resize_observer');
 function toPx(n) {
   return `${n}px`;
 }
@@ -39,25 +38,7 @@ function getPixelSize({ wrapper, columns, rows, borderWidth, }) {
   const gridSize = Math.max(columns, rows);
   const totalBorderSize = gridSize * borderWidth + 2;
 
-  return Math.max(Math.floor((wrapperSize - totalBorderSize) / gridSize), 0);
-}
-function observePixelSize(opts) {
-  // @ts-ignore not implemented in current ts dom
-  const observer = new ResizeObserver(throttle(() => {    
-    const pixelSize = getPixelSize(opts);
-
-    const cells = opts.wrapper.getElementsByTagName("td");
-    for (let i = 0; i < cells.length; i++) {
-      const cell = cells.item(i);
-      if (!cell) {
-        continue;
-      }
-      cell.style.width = toPx(pixelSize);
-      cell.style.height = toPx(pixelSize);
-    }
-  }, 100));
-  
-  observer.observe(opts.wrapper);
+  return Math.floor((wrapperSize - totalBorderSize) / gridSize);
 }
 function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColor, }) {
   const params = {
@@ -68,8 +49,14 @@ function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColo
     borderWidth,
     borderColor,
   };
-  const pixelSize = getPixelSize(params);  
-  observePixelSize(params);
+
+  let scale = 1;
+  let pixelSize = getPixelSize(params);
+  if (pixelSize < 1) {
+    pixelSize = 1;
+    scale = 0.5;
+  }
+
   const baseCell = document.createElement("td");
   baseCell.style.width = toPx(pixelSize);
   baseCell.style.height = toPx(pixelSize);
@@ -88,10 +75,12 @@ function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColo
   const table = document.createElement("table");
   table.style.backgroundColor = borderColor;
   table.style.position = 'relative';
+  table.style.transform = `scale(${scale}, ${scale})`;
+
   // table { border-collapse: separate; border-spacing: 5px; } /* cellspacing="5" */
   // table { border-collapse: collapse; border-spacing: 0; }
   table.style.borderSpacing = toPx(borderWidth);
-  table.style.borderCollapse = borderWidth > 0 ? "separate" : "collapse";
+  table.style.borderCollapse = borderWidth > 0 ? "separate" : "collapse";  
   table.appendChild(tbody);
   wrapper.appendChild(table);
   return tbody;
