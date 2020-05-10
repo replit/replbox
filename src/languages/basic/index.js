@@ -8,7 +8,7 @@ Messenger.on('stop', () => {
   if (basic) basic.end();
 });
 
-Messenger.on('evaluate', ({ code }) => {  
+Messenger.on('evaluate', ({ code }) => {
   const wrapper = document.createElement('div');
   wrapper.style.height = '100%';
   wrapper.style.width = '100%';
@@ -16,17 +16,26 @@ Messenger.on('evaluate', ({ code }) => {
   wrapper.setAttribute('tabindex', '0');
   document.body.appendChild(wrapper);
 
-  const columns = 50;
-  const rows = 50;
-
-  const grid = new Display({
-    wrapper,
-    rows,
-    columns,
-    defaultBg: 'white',
-    borderWidth: 1,
-    borderColor: 'black',
-  });
+  function createDisplay({
+    rows = 50,
+    columns = 50,
+    borderWidth = 1,
+    borderColor = 'black',
+    defaultBg = 'white',
+  } = {}) {
+    while (wrapper.firstChild) {
+      wrapper.removeChild(wrapper.firstChild);
+    }
+    
+    return new Display({
+      wrapper,
+      rows,
+      columns,
+      defaultBg,
+      borderWidth,
+      borderColor,
+    });
+  }
 
   let inputCallback = null;
   const cnsle = {
@@ -49,13 +58,11 @@ Messenger.on('evaluate', ({ code }) => {
 
   basic = new Basic({
     console: cnsle,
-    display: grid,
+    createDisplay,
     // debugLevel: 9999,
     constants: {
       LEVEL: 1,
       PI: Math.PI,
-      COLUMNS: columns,
-      ROWS: rows,
     },
   });
 

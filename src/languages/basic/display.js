@@ -34,7 +34,7 @@ function observePixelSize(opts) {
   });
   observer.observe(opts.wrapper);
 }
-function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColor, }) {
+function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColor, }) {  
   const params = {
     wrapper,
     rows,

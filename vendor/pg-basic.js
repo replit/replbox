@@ -376,18 +376,18 @@ function () {
 }();
 
 var eof = new Token('eof', '');
-var KEYWORDS = ['IF', 'THEN', 'ELSE', 'FOR', 'ON', 'TO', 'STEP', 'GOTO', 'GOSUB', 'RETURN', 'NEXT', 'INPUT', 'LET', 'CLC', 'CLT', 'CLS', 'END', 'PRINT', 'PLOT', 'TEXT', 'UNTEXT', 'DRAW', 'UNDRAW', 'ARRAY', 'DIM', 'DATA', 'READ', 'REM', 'PAUSE', 'STOP'];
-var CONSTANTS = ['LEVEL', 'PI'];
+var KEYWORDS = ['IF', 'THEN', 'ELSE', 'FOR', 'ON', 'TO', 'STEP', 'GOTO', 'GOSUB', 'RETURN', 'NEXT', 'INPUT', 'LET', 'CLC', 'CLT', 'CLS', 'END', 'PRINT', 'PLOT', 'TEXT', 'UNTEXT', 'DRAW', 'UNDRAW', 'ARRAY', 'DIM', 'DATA', 'READ', 'REM', 'PAUSE', 'STOP', 'DISPLAY'];
+var CONSTANTS = ['LEVEL', 'PI', 'COLUMNS', 'ROWS'];
 var LINE = /^\s*(\d+)\s*/;
 var QUOTE = /^"((\\.|[^"\\])*)"\s*/;
-var KEY = new RegExp('^(' + KEYWORDS.join('|') + ')\\s*', 'i');
-var FUN = new RegExp('^(' + Object.keys(Functions).join('|') + ')\\s*', 'i');
-var CONST = new RegExp('^(' + CONSTANTS.join('|') + ')\\s*', 'i');
+var KEY = new RegExp('^(' + KEYWORDS.join('|') + ')\\b', 'i');
+var FUN = new RegExp('^(' + Object.keys(Functions).join('|') + ')\\b', 'i');
+var CONST = new RegExp('^(' + CONSTANTS.join('|') + ')\\b', 'i');
 var VAR = /^([a-z][\w$]*)\s*/i;
 var NUM = /^(\d+(\.\d+)?)\s*/i;
 var OP = /^(<>|>=|<=|[,\+\-\*\/%=<>\(\)\]\[])\s*/i;
-var LOGIC = /^(AND|OR|NOT)\s*/i;
-var BOOL = /^(true|false)\s*/i;
+var LOGIC = /^(AND|OR|NOT)\b/i;
+var BOOL = /^(true|false)\b/i;
 var LINEMOD = /^(;)\s*/i;
 
 var Tokenizer =
@@ -470,7 +470,7 @@ function () {
           throw new ParseError(this.lineno, "Invalid syntax near: '".concat(this.stmnt, "'"));
         }
 
-        this.stmnt = this.stmnt.slice(eaten.length);
+        this.stmnt = this.stmnt.slice(eaten.length).trim();
       }
 
       this.tokenized = true;
@@ -498,7 +498,7 @@ function () {
         this.tokens.push(new Token('keyword', keyword)); // If the keyword is a comment then eat it up.
 
         if (keyword === 'REM') {
-          this.tokens.push(new Token('comment', this.stmnt.slice(m[0].length)));
+          this.tokens.push(new Token('comment', this.stmnt.slice(m[0].length).trim()));
           return this.stmnt;
         }
 
@@ -1246,6 +1246,40 @@ function (_Node21) {
   return CLC;
 }(Node);
 
+var DISPLAY =
+/*#__PURE__*/
+function (_Node22) {
+  _inherits(DISPLAY, _Node22);
+
+  function DISPLAY(lineno, rows, cols) {
+    var _this19;
+
+    var hasBorder = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'true';
+
+    _classCallCheck(this, DISPLAY);
+
+    _this19 = _possibleConstructorReturn(this, _getPrototypeOf(DISPLAY).call(this, lineno, 'DISPLAY'));
+    _this19.rows = rows;
+    _this19.cols = cols;
+    _this19.hasBorder = hasBorder;
+    return _this19;
+  }
+
+  _createClass(DISPLAY, [{
+    key: "run",
+    value: function run(context) {
+      context.recreateDisplay({
+        rows: context.evaluate(this.rows),
+        columns: context.evaluate(this.cols),
+        hasBorder: context.evaluate(this.hasBorder)
+      });
+    }
+  }]);
+
+  return DISPLAY;
+}(Node);
+
+;
 module.exports = {
   Node: Node,
   PRINT: PRINT,
@@ -1268,6 +1302,7 @@ module.exports = {
   TEXT: TEXT,
   UNTEXT: UNTEXT,
   DRAW: DRAW,
+  DISPLAY: DISPLAY,
   Variable: Variable
 };
 },{"./errors":"errors.js"}],"expr.js":[function(require,module,exports) {
@@ -1377,6 +1412,7 @@ var _require = require('./nodes'),
     TEXT = _require.TEXT,
     UNTEXT = _require.UNTEXT,
     DRAW = _require.DRAW,
+    DISPLAY = _require.DISPLAY,
     Variable = _require.Variable;
 
 var exprToJS = require('./expr');
@@ -1707,6 +1743,30 @@ function () {
 
         case 'CLT':
           return new CLT(this.lineno);
+
+        case 'DISPLAY':
+          {
+            var rows = this.expectExpr({
+              stopOnComma: true,
+              errStr: 'DISPLAY requires rows'
+            });
+            this.expectOperation(',');
+            var cols = this.expectExpr({
+              stopOnComma: true,
+              errStr: 'DISPLAY requires columns'
+            });
+            var hasBorder = undefined;
+
+            if (this.tokenizer.peek() !== Tokenizer.eof) {
+              this.expectOperation(',');
+              hasBorder = this.expectExpr({
+                stopOnComma: true,
+                errStr: 'DISPLAY border argument'
+              });
+            }
+
+            return new DISPLAY(this.lineno, rows, cols, hasBorder);
+          }
       }
 
       throw new ParseError(this.lineno, "Unexpected token ".concat(top.lexeme));
@@ -1931,7 +1991,7 @@ function () {
   function Basic(_ref) {
     var console = _ref.console,
         debugLevel = _ref.debugLevel,
-        display = _ref.display;
+        createDisplay = _ref.createDisplay;
 
     _classCallCheck(this, Basic);
 
@@ -1946,10 +2006,13 @@ function () {
     this.loops = {};
     this.stack = [];
     this.jumped = false;
-    this.display = display;
+    this.display = null;
+    this.createDisplay = createDisplay;
     this.constants = {
       PI: Math.PI,
-      LEVEL: 1
+      LEVEL: 1,
+      ROWS: 50,
+      COLUMNS: 50
     };
   }
 
@@ -1963,11 +2026,34 @@ function () {
       }
     }
   }, {
+    key: "recreateDisplay",
+    value: function recreateDisplay(_ref2) {
+      var rows = _ref2.rows,
+          columns = _ref2.columns,
+          hasBorder = _ref2.hasBorder;
+
+      if (!this.createDisplay) {
+        throw new RuntimeError(this.lineno, 'No display attached');
+      }
+
+      this.constants.ROWS = rows;
+      this.constants.COLUMNS = columns;
+      this.display = this.createDisplay({
+        rows: rows,
+        columns: columns,
+        borderWidth: hasBorder ? 1 : 0
+      });
+    }
+  }, {
     key: "run",
     value: function run(program) {
       var _this = this;
 
       return new Promise(function (resolve, reject) {
+        if (_this.createDisplay) {
+          _this.display = _this.createDisplay();
+        }
+
         _this.onEnd = {
           resolve: resolve,
           reject: reject
@@ -2071,8 +2157,8 @@ function () {
     value: function getCurLine() {
       var _this3 = this;
 
-      return this.program.find(function (_ref2) {
-        var lineno = _ref2.lineno;
+      return this.program.find(function (_ref3) {
+        var lineno = _ref3.lineno;
         return lineno === _this3.lineno;
       });
     }
@@ -2213,11 +2299,11 @@ function () {
     }
   }, {
     key: "loopStart",
-    value: function loopStart(_ref3) {
-      var variable = _ref3.variable,
-          value = _ref3.value,
-          increment = _ref3.increment,
-          max = _ref3.max;
+    value: function loopStart(_ref4) {
+      var variable = _ref4.variable,
+          value = _ref4.value,
+          increment = _ref4.increment,
+          max = _ref4.max;
       this.debug("marking loop ".concat(variable));
       this.set(variable, value);
       var next = this.getNextLine();
