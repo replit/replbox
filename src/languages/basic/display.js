@@ -1,40 +1,65 @@
+require('./resize_observer');
 function toPx(n) {
   return `${n}px`;
 }
+function throttle(func, wait, options) {
+  var context, args, result;
+  var timeout = null;
+  var previous = 0;
+  if (!options) options = {};
+  var later = function() {
+    previous = options.leading === false ? 0 : Date.now();
+    timeout = null;
+    result = func.apply(context, args);
+    if (!timeout) context = args = null;
+  };
+  return function() {
+    var now = Date.now();
+    if (!previous && options.leading === false) previous = now;
+    var remaining = wait - (now - previous);
+    context = this;
+    args = arguments;
+    if (remaining <= 0 || remaining > wait) {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = now;
+      result = func.apply(context, args);
+      if (!timeout) context = args = null;
+    } else if (!timeout && options.trailing !== false) {
+      timeout = setTimeout(later, remaining);
+    }
+    return result;
+  };
+};
+
 function getPixelSize({ wrapper, columns, rows, borderWidth, }) {
   const wrapperSize = Math.min(wrapper.clientWidth, wrapper.clientHeight);
   const gridSize = Math.max(columns, rows);
   const totalBorderSize = gridSize * borderWidth + 2;
-  return Math.floor((wrapperSize - totalBorderSize) / gridSize);
+
+  return Math.max(Math.floor((wrapperSize - totalBorderSize) / gridSize), 0);
 }
 function observePixelSize(opts) {
   // @ts-ignore not implemented in current ts dom
-  if (typeof ResizeObserver === "undefined") {
-    return;
-  }
-  let throttleTimer = null;
-  // @ts-ignore not implemented in current ts dom
-  const observer = new ResizeObserver(() => {
-    if (throttleTimer) {
-      return;
-    }
-    throttleTimer = setTimeout(() => {
-      throttleTimer = null;
-      const pixelSize = getPixelSize(opts);
-      const cells = opts.wrapper.getElementsByTagName("td");
-      for (let i = 0; i < cells.length; i++) {
-        const cell = cells.item(i);
-        if (!cell) {
-          continue;
-        }
-        cell.style.width = toPx(pixelSize);
-        cell.style.height = toPx(pixelSize);
+  const observer = new ResizeObserver(throttle(() => {    
+    const pixelSize = getPixelSize(opts);
+
+    const cells = opts.wrapper.getElementsByTagName("td");
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells.item(i);
+      if (!cell) {
+        continue;
       }
-    }, 50);
-  });
+      cell.style.width = toPx(pixelSize);
+      cell.style.height = toPx(pixelSize);
+    }
+  }, 100));
+  
   observer.observe(opts.wrapper);
 }
-function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColor, }) {  
+function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColor, }) {
   const params = {
     wrapper,
     rows,
@@ -43,7 +68,7 @@ function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColo
     borderWidth,
     borderColor,
   };
-  const pixelSize = getPixelSize(params);
+  const pixelSize = getPixelSize(params);  
   observePixelSize(params);
   const baseCell = document.createElement("td");
   baseCell.style.width = toPx(pixelSize);
