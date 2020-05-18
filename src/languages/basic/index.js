@@ -1,11 +1,13 @@
 const Basic = require('../../../vendor/pg-basic.js');
 const Messenger = require('../../shared/messenger');
 const Display = require('./display');
+const sound = require('./sound');
 
 let basic;
 
 Messenger.on('stop', () => {
   if (basic) basic.end();
+  sound.close();  
 });
 
 Messenger.on('evaluate', ({ code }) => {
@@ -49,7 +51,6 @@ Messenger.on('evaluate', ({ code }) => {
       Messenger.inputEvent();
 
       Messenger.once('write', input => {
-        console.log(input);
         // remove new-line
         callback(input.replace(/\n$/, ''));
       });
@@ -59,6 +60,7 @@ Messenger.on('evaluate', ({ code }) => {
   basic = new Basic({
     console: cnsle,
     createDisplay,
+    sound,
     // debugLevel: 9999,
     constants: {
       LEVEL: 1,

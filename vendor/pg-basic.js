@@ -376,7 +376,7 @@ function () {
 }();
 
 var eof = new Token('eof', '');
-var KEYWORDS = ['IF', 'THEN', 'ELSE', 'FOR', 'ON', 'TO', 'STEP', 'GOTO', 'GOSUB', 'RETURN', 'NEXT', 'INPUT', 'LET', 'CLC', 'CLT', 'CLS', 'END', 'PRINT', 'PLOT', 'TEXT', 'UNTEXT', 'DRAW', 'UNDRAW', 'ARRAY', 'DIM', 'DATA', 'READ', 'REM', 'PAUSE', 'STOP', 'DISPLAY'];
+var KEYWORDS = ['IF', 'THEN', 'ELSE', 'FOR', 'ON', 'TO', 'STEP', 'GOTO', 'GOSUB', 'RETURN', 'NEXT', 'INPUT', 'LET', 'CLC', 'CLT', 'CLS', 'END', 'PRINT', 'PLOT', 'TEXT', 'DRAW', 'UNDRAW', 'ARRAY', 'DIM', 'DATA', 'READ', 'REM', 'PAUSE', 'STOP', 'DISPLAY', 'PLAY', 'SOUND'];
 var CONSTANTS = ['LEVEL', 'PI', 'COLUMNS', 'ROWS'];
 var LINE = /^\s*(\d+)\s*/;
 var QUOTE = /^"((\\.|[^"\\])*)"\s*/;
@@ -1006,45 +1006,19 @@ function (_Node11) {
   return TEXT;
 }(Node);
 
-var UNTEXT =
-/*#__PURE__*/
-function (_Node12) {
-  _inherits(UNTEXT, _Node12);
-
-  function UNTEXT(lineno, x, y) {
-    var _this14;
-
-    _classCallCheck(this, UNTEXT);
-
-    _this14 = _possibleConstructorReturn(this, _getPrototypeOf(UNTEXT).call(this, lineno, 'UNTEXT'));
-    _this14.x = x;
-    _this14.y = y;
-    return _this14;
-  }
-
-  _createClass(UNTEXT, [{
-    key: "run",
-    value: function run(context) {
-      context.text(context.evaluate(this.x), context.evaluate(this.y));
-    }
-  }]);
-
-  return UNTEXT;
-}(Node);
-
 var DRAW =
 /*#__PURE__*/
-function (_Node13) {
-  _inherits(DRAW, _Node13);
+function (_Node12) {
+  _inherits(DRAW, _Node12);
 
   function DRAW(lineno, array) {
-    var _this15;
+    var _this14;
 
     _classCallCheck(this, DRAW);
 
-    _this15 = _possibleConstructorReturn(this, _getPrototypeOf(DRAW).call(this, lineno, 'DRAW'));
-    _this15.array = array;
-    return _this15;
+    _this14 = _possibleConstructorReturn(this, _getPrototypeOf(DRAW).call(this, lineno, 'DRAW'));
+    _this14.array = array;
+    return _this14;
   }
 
   _createClass(DRAW, [{
@@ -1059,8 +1033,8 @@ function (_Node13) {
 
 var END =
 /*#__PURE__*/
-function (_Node14) {
-  _inherits(END, _Node14);
+function (_Node13) {
+  _inherits(END, _Node13);
 
   function END() {
     _classCallCheck(this, END);
@@ -1080,19 +1054,19 @@ function (_Node14) {
 
 var IF =
 /*#__PURE__*/
-function (_Node15) {
-  _inherits(IF, _Node15);
+function (_Node14) {
+  _inherits(IF, _Node14);
 
   function IF(lineno, condition, then, elze) {
-    var _this16;
+    var _this15;
 
     _classCallCheck(this, IF);
 
-    _this16 = _possibleConstructorReturn(this, _getPrototypeOf(IF).call(this, lineno, 'IF'));
-    _this16.condition = condition;
-    _this16.then = then;
-    _this16.elze = elze;
-    return _this16;
+    _this15 = _possibleConstructorReturn(this, _getPrototypeOf(IF).call(this, lineno, 'IF'));
+    _this15.condition = condition;
+    _this15.then = then;
+    _this15.elze = elze;
+    return _this15;
   }
 
   _createClass(IF, [{
@@ -1111,17 +1085,17 @@ function (_Node15) {
 
 var GOSUB =
 /*#__PURE__*/
-function (_Node16) {
-  _inherits(GOSUB, _Node16);
+function (_Node15) {
+  _inherits(GOSUB, _Node15);
 
   function GOSUB(lineno, expr) {
-    var _this17;
+    var _this16;
 
     _classCallCheck(this, GOSUB);
 
-    _this17 = _possibleConstructorReturn(this, _getPrototypeOf(GOSUB).call(this, lineno, 'GOSUB'));
-    _this17.expr = expr;
-    return _this17;
+    _this16 = _possibleConstructorReturn(this, _getPrototypeOf(GOSUB).call(this, lineno, 'GOSUB'));
+    _this16.expr = expr;
+    return _this16;
   }
 
   _createClass(GOSUB, [{
@@ -1138,8 +1112,8 @@ function (_Node16) {
 
 var RETURN =
 /*#__PURE__*/
-function (_Node17) {
-  _inherits(RETURN, _Node17);
+function (_Node16) {
+  _inherits(RETURN, _Node16);
 
   function RETURN() {
     _classCallCheck(this, RETURN);
@@ -1159,18 +1133,18 @@ function (_Node17) {
 
 var ARRAY =
 /*#__PURE__*/
-function (_Node18) {
-  _inherits(ARRAY, _Node18);
+function (_Node17) {
+  _inherits(ARRAY, _Node17);
 
   function ARRAY(lineno, variable, dim) {
-    var _this18;
+    var _this17;
 
     _classCallCheck(this, ARRAY);
 
-    _this18 = _possibleConstructorReturn(this, _getPrototypeOf(ARRAY).call(this, lineno, 'ARRAY'));
-    _this18.variable = variable;
-    _this18.dim = dim;
-    return _this18;
+    _this17 = _possibleConstructorReturn(this, _getPrototypeOf(ARRAY).call(this, lineno, 'ARRAY'));
+    _this17.variable = variable;
+    _this17.dim = dim;
+    return _this17;
   }
 
   _createClass(ARRAY, [{
@@ -1185,8 +1159,8 @@ function (_Node18) {
 
 var CLS =
 /*#__PURE__*/
-function (_Node19) {
-  _inherits(CLS, _Node19);
+function (_Node18) {
+  _inherits(CLS, _Node18);
 
   function CLS() {
     _classCallCheck(this, CLS);
@@ -1206,8 +1180,8 @@ function (_Node19) {
 
 var CLT =
 /*#__PURE__*/
-function (_Node20) {
-  _inherits(CLT, _Node20);
+function (_Node19) {
+  _inherits(CLT, _Node19);
 
   function CLT() {
     _classCallCheck(this, CLT);
@@ -1227,8 +1201,8 @@ function (_Node20) {
 
 var CLC =
 /*#__PURE__*/
-function (_Node21) {
-  _inherits(CLC, _Node21);
+function (_Node20) {
+  _inherits(CLC, _Node20);
 
   function CLC() {
     _classCallCheck(this, CLC);
@@ -1248,21 +1222,21 @@ function (_Node21) {
 
 var DISPLAY =
 /*#__PURE__*/
-function (_Node22) {
-  _inherits(DISPLAY, _Node22);
+function (_Node21) {
+  _inherits(DISPLAY, _Node21);
 
   function DISPLAY(lineno, rows, cols) {
-    var _this19;
+    var _this18;
 
     var hasBorder = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'true';
 
     _classCallCheck(this, DISPLAY);
 
-    _this19 = _possibleConstructorReturn(this, _getPrototypeOf(DISPLAY).call(this, lineno, 'DISPLAY'));
-    _this19.rows = rows;
-    _this19.cols = cols;
-    _this19.hasBorder = hasBorder;
-    return _this19;
+    _this18 = _possibleConstructorReturn(this, _getPrototypeOf(DISPLAY).call(this, lineno, 'DISPLAY'));
+    _this18.rows = rows;
+    _this18.cols = cols;
+    _this18.hasBorder = hasBorder;
+    return _this18;
   }
 
   _createClass(DISPLAY, [{
@@ -1280,6 +1254,79 @@ function (_Node22) {
 }(Node);
 
 ;
+
+var SOUND =
+/*#__PURE__*/
+function (_Node22) {
+  _inherits(SOUND, _Node22);
+
+  function SOUND(lineno, freq) {
+    var _this19;
+
+    var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '1';
+
+    _classCallCheck(this, SOUND);
+
+    _this19 = _possibleConstructorReturn(this, _getPrototypeOf(SOUND).call(this, lineno, 'SOUND'));
+    _this19.lineno = lineno;
+    _this19.frequency = freq;
+    _this19.duration = duration;
+    return _this19;
+  }
+
+  _createClass(SOUND, [{
+    key: "run",
+    value: function run(context) {
+      var d = context.evaluate(this.duration);
+      context.sound(context.evaluate(this.frequency), d);
+
+      if (typeof d === 'number' && d > 0) {
+        // pause until we play sound
+        context.pause(d * 1000);
+      }
+    }
+  }]);
+
+  return SOUND;
+}(Node);
+
+var PLAY =
+/*#__PURE__*/
+function (_Node23) {
+  _inherits(PLAY, _Node23);
+
+  function PLAY(lineno, note) {
+    var _this20;
+
+    var octave = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '2';
+    var duration = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '1';
+
+    _classCallCheck(this, PLAY);
+
+    _this20 = _possibleConstructorReturn(this, _getPrototypeOf(PLAY).call(this, lineno, 'SOUND'));
+    _this20.lineno = lineno;
+    _this20.note = note;
+    _this20.octave = octave;
+    _this20.duration = duration;
+    return _this20;
+  }
+
+  _createClass(PLAY, [{
+    key: "run",
+    value: function run(context) {
+      var d = context.evaluate(this.duration);
+      context.play(context.evaluate(this.note), context.evaluate(this.octave), d);
+
+      if (typeof d === 'number' && d > 0) {
+        // pause until we play sound
+        context.pause(d * 1000);
+      }
+    }
+  }]);
+
+  return PLAY;
+}(Node);
+
 module.exports = {
   Node: Node,
   PRINT: PRINT,
@@ -1300,9 +1347,10 @@ module.exports = {
   CLT: CLT,
   CLC: CLC,
   TEXT: TEXT,
-  UNTEXT: UNTEXT,
   DRAW: DRAW,
   DISPLAY: DISPLAY,
+  SOUND: SOUND,
+  PLAY: PLAY,
   Variable: Variable
 };
 },{"./errors":"errors.js"}],"expr.js":[function(require,module,exports) {
@@ -1410,9 +1458,10 @@ var _require = require('./nodes'),
     CLC = _require.CLC,
     CLT = _require.CLT,
     TEXT = _require.TEXT,
-    UNTEXT = _require.UNTEXT,
     DRAW = _require.DRAW,
     DISPLAY = _require.DISPLAY,
+    SOUND = _require.SOUND,
+    PLAY = _require.PLAY,
     Variable = _require.Variable;
 
 var exprToJS = require('./expr');
@@ -1710,23 +1759,6 @@ function () {
             return new TEXT(this.lineno, _x, _y, text, size, _color);
           }
 
-        case 'UNTEXT':
-          {
-            var _x2 = this.expectExpr({
-              stopOnComma: true,
-              errStr: 'Expected a value for the X axis for TEXT'
-            });
-
-            this.expectOperation(',');
-
-            var _y2 = this.expectExpr({
-              stopOnComma: true,
-              errStr: 'Expected a value for Y axis for TEXT'
-            });
-
-            return new UNTEXT(this.lineno, _x2, _y2);
-          }
-
         case 'DRAW':
           {
             var array = this.expectExpr({
@@ -1766,6 +1798,53 @@ function () {
             }
 
             return new DISPLAY(this.lineno, rows, cols, hasBorder);
+          }
+
+        case 'SOUND':
+          {
+            var freq = this.expectExpr({
+              stopOnComma: true,
+              errStr: 'SOUND requires a frequency'
+            });
+            var duration = undefined;
+
+            if (this.tokenizer.peek() !== Tokenizer.eof) {
+              this.expectOperation(',');
+              duration = this.expectExpr({
+                stopOnComma: true,
+                errStr: 'SOUND exepected a duration'
+              });
+            }
+
+            return new SOUND(this.lineno, freq, duration);
+          }
+
+        case 'PLAY':
+          {
+            var note = this.expectExpr({
+              stopOnComma: true,
+              errStr: 'PLAY requires a note'
+            });
+            var octave = undefined;
+            var _duration = undefined;
+
+            if (this.tokenizer.peek() !== Tokenizer.eof) {
+              this.expectOperation(',');
+              octave = this.expectExpr({
+                stopOnComma: true,
+                errStr: 'PLAY exepected a octave'
+              });
+
+              if (this.tokenizer.peek() !== Tokenizer.eof) {
+                this.expectOperation(',');
+                _duration = this.expectExpr({
+                  stopOnComma: true,
+                  errStr: 'PLAY exepected a duration'
+                });
+              }
+            }
+
+            return new PLAY(this.lineno, note, octave, _duration);
           }
       }
 
@@ -1991,7 +2070,8 @@ function () {
   function Basic(_ref) {
     var console = _ref.console,
         debugLevel = _ref.debugLevel,
-        createDisplay = _ref.createDisplay;
+        createDisplay = _ref.createDisplay,
+        sound = _ref.sound;
 
     _classCallCheck(this, Basic);
 
@@ -2008,6 +2088,7 @@ function () {
     this.jumped = false;
     this.display = null;
     this.createDisplay = createDisplay;
+    this._sound = sound;
     this.constants = {
       PI: Math.PI,
       LEVEL: 1,
@@ -2368,6 +2449,13 @@ function () {
       }
     }
   }, {
+    key: "assertSound",
+    value: function assertSound() {
+      if (!this._sound) {
+        return this.end(new RuntimeError(this.lineno, 'No sound found'));
+      }
+    }
+  }, {
     key: "yield",
     value: function _yield() {
       var _this5 = this;
@@ -2409,6 +2497,18 @@ function () {
       this.assertDisplay();
       this.display.text(x, y, _text, size, color);
       this.yield();
+    }
+  }, {
+    key: "sound",
+    value: function sound(freq, duration) {
+      this.assertSound();
+
+      this._sound.sound(freq, duration);
+    }
+  }, {
+    key: "play",
+    value: function play(note, octave, duration) {
+      this._sound.play(note, octave, duration);
     }
   }, {
     key: "color",
