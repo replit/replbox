@@ -39,7 +39,6 @@ Messenger.on('evaluate', ({ code }) => {
     });
   }
 
-  let inputCallback = null;
   const cnsle = {
     write: s => {
       Messenger.output(s);
