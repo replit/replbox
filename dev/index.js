@@ -11,8 +11,8 @@ let cm = CodeMirror($('#editor').get(0), {
   styleActiveLine: true,
   value: '',
 });
-
 // TODO populate languages in select from /data/languages
+
 
 const jqconsole = $('#console').jqconsole('', '   ', '.. ', true);
 
@@ -94,3 +94,13 @@ async function loadReplbox() {
 
   return replbox;
 }
+
+$('#save').click(() => {
+  location.hash = encodeURIComponent(cm.getValue());
+});
+
+$(document).ready(() => {
+  if (location.hash) {
+    cm.setValue(decodeURIComponent(location.hash.slice(1)));
+  }
+});

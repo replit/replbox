@@ -1,157 +1,167 @@
-function toPx(n) {
-  return `${n}px`;
-}
-
-function getPixelSize({ wrapper, columns, rows, borderWidth, }) {
-  const wrapperSize = Math.min(wrapper.clientWidth, wrapper.clientHeight);
-  const gridSize = Math.max(columns, rows);
-  const totalBorderSize = gridSize * borderWidth + 2;
-
-  return Math.floor((wrapperSize - totalBorderSize) / gridSize);
-}
-
-function createGrid({ wrapper, rows, columns, defaultBg, borderWidth, borderColor, }) {
-  const params = {
+module.exports = class TableDisplay {
+  constructor({
     wrapper,
     rows,
     columns,
     defaultBg,
     borderWidth,
     borderColor,
-  };
-
-  let scale = 1;
-  let pixelSize = getPixelSize(params);
-  if (pixelSize < 1) {
-    pixelSize = 1;
-    scale = 0.5;
-  }
-
-  const baseCell = document.createElement("td");
-  baseCell.style.width = toPx(pixelSize);
-  baseCell.style.height = toPx(pixelSize);
-  baseCell.style.padding = toPx(0);
-  baseCell.style.backgroundColor = defaultBg;
-  const baseRow = document.createElement("tr");
-  for (let _ = 0; _ < columns; _++) {
-    const pixel = baseCell.cloneNode(true);
-    baseRow.appendChild(pixel);
-  }
-  const tbody = document.createElement("tbody");
-  for (let _ = 0; _ < rows; _++) {
-    const row = baseRow.cloneNode(true);
-    tbody.appendChild(row);
-  }
-  const table = document.createElement("table");
-  table.style.backgroundColor = borderColor;
-  table.style.position = 'relative';
-  table.style.transform = `scale(${scale}, ${scale})`;
-
-  // table { border-collapse: separate; border-spacing: 5px; } /* cellspacing="5" */
-  // table { border-collapse: collapse; border-spacing: 0; }
-  table.style.borderSpacing = toPx(borderWidth);
-  table.style.borderCollapse = borderWidth > 0 ? "separate" : "collapse";  
-  table.appendChild(tbody);
-  wrapper.appendChild(table);
-  return tbody;
-}
-
-module.exports = class TableDisplay {
-  constructor({ wrapper, rows, columns, defaultBg, borderWidth, borderColor, }) {
-    this.grid = createGrid({
-      wrapper,
-      rows,
-      columns,
-      defaultBg,
-      borderWidth,
-      borderColor,
-    });
+  }) {
     this.rows = rows;
     this.columns = columns;
     this.defaultBg = defaultBg;
-    this.keyQueue = [];
-    this.clickQueue = [];
-    this.pressedKey = undefined;
-    this.texts = {};
-    this.initKeyQueuing();
-  }
-  initKeyQueuing() {
+    this.borderWidth = borderWidth;
+    this.borderColor = borderColor;
+
+    this.pixmap = (new Array(rows * columns)).fill(defaultBg);
+    this.clean = (new Array(rows * columns)).fill(false);
+
+    const canvas = document.createElement('canvas')
+    this.ctx = canvas.getContext('2d');
+    wrapper.appendChild(canvas);
+
+    const resize = () => {
+      const width = wrapper.clientWidth;
+      const height = wrapper.clientHeight;
+
+      this.dim = Math.max(Math.floor(
+        Math.min(width / columns, height / rows),
+      ), 1 + borderWidth);
+
+      canvas.width = (this.dim * columns) + borderWidth;
+      canvas.height = (this.dim * rows) + borderWidth;
+    };
     const getKey = (e) => e.key || String.fromCharCode(e.keyCode);
-    window.addEventListener("keypress", (e) => {
+    this.keyQueue = [];
+    wrapper.addEventListener('keypress', e => {
       this.keyQueue.push(getKey(e));
     });
-    this.grid.addEventListener("click", (e) => {
-      if (e.target.nodeName !== 'TD') return;
+
+    this.clickQueue = [];
+    canvas.addEventListener('click', e => {
+      const rect = e.target.getBoundingClientRect()
+      const x = Math.floor((e.clientX - rect.x) / this.dim);
+      const y = Math.floor((e.clientY - rect.y) / this.dim);
       this.clickQueue.push([
-        e.target.cellIndex,
-        e.target.parentNode.rowIndex,
-      ])
-    });
+        Math.min(Math.max(x, 0), columns - 1),
+        Math.min(Math.max(y, 0), rows - 1),
+      ]);
+    })
+
+    resize();
+    this.render();
   }
-  isInside(x, y) {
-    return x < this.columns && x >= 0 && y < this.rows && y >= 0;
+
+  queueRender = () => {
+    if (this.pendingRender) return;
+    this.pendingRender = true;
+
+    requestAnimationFrame(() => {
+      this.pendingRender = false;
+      this.render();
+    })
   }
-  getPixel(x, y) {
-    const row = this.grid.rows.item(y);
-    if (!row) {
-      throw new Error(`Expected row at ${y}`);
-    }
-    const pixel = row.cells.item(x);
-    if (!pixel) {
-      throw new Error(`Expected pixel at (${x},${y})`);
-    }
-    return pixel;
-  }
-  plot(xFloat, yFloat, color) {
-    const x = Math.floor(xFloat);
-    const y = Math.floor(yFloat);
-    if (!this.isInside(x, y)) {
-      return;
-    }
-    const pixel = this.getPixel(x, y);
-    pixel.style.backgroundColor = color;
-  }
-  color(xFloat, yFloat) {
-    const x = Math.floor(xFloat);
-    const y = Math.floor(yFloat);
-    if (!this.isInside(x, y)) {
-      return this.defaultBg;
-    }
-    const pixel = this.getPixel(x, y);
-    return pixel.style.backgroundColor || this.defaultBg;
-  }
-  clear() {
-    for (let x = 0; x < this.columns; x++) {
-      for (let y = 0; y < this.rows; y++) {
-        const pixel = this.getPixel(x, y);
-        pixel.style.backgroundColor = this.defaultBg;
+
+  render = () => {
+    const {
+      pixmap,
+      rows,
+      columns,
+      borderWidth,
+      borderColor,
+      defaultBg,
+      clean,
+      ctx,
+      dim,
+    } = this;
+
+    if (borderWidth) {
+      ctx.fillStyle = borderColor;
+      for (let i = 0; i < columns + 1; i++) {
+        ctx.fillRect((dim) * i, 0, borderWidth, dim * rows);
+      }
+      for (let i = 0; i < rows + 1; i++) {
+        ctx.fillRect(
+          0,
+          (dim) * i,
+          dim * columns + borderWidth,
+          borderWidth,
+        );
       }
     }
 
-    for (let pos in this.texts) {
-      const el = this.texts[pos];
-      el.parentElement.removeChild(el);
+    let prev;
+    for (let i = 0; i < pixmap.length; i++) {
+      if (clean[i]) continue;
+
+      if (pixmap[i] !== prev) {
+        prev = ctx.fillStyle = pixmap[i];
+      }
+
+      const x = (dim) * (i % columns) + borderWidth;
+      const y = (dim) * Math.floor(i / columns) + borderWidth;
+
+      ctx.fillRect(x, y, dim - borderWidth, dim - borderWidth);
     }
+
+    this.clean.fill(true);
   }
-  getChar() {
-    return this.keyQueue.shift();
+
+  plot = (x, y, color) => {
+    if (!color) return;
+
+    // Add # to hex colors (backwards compat)
+    if (color.match(/[0-9A-Fa-f]{6}/)) {
+      color = '#' + color;
+    }
+
+    if (typeof x !== 'number') {
+      x = parseFloat(x);
+      if (isNaN(x)) return;
+    }
+
+    if (typeof y !== 'number') {
+      y = parseFloat(y);
+      if (isNaN(y)) return;
+    }
+
+    x = Math.round(x);
+    y = Math.round(y);
+
+    if (x < 0 || y < 0) return;
+
+    const i = y * this.rows + x;
+
+    if (!this.pixmap[i]) return;
+    if (this.pixmap[i] === color) return;
+
+    this.clean[i] = false;
+    this.pixmap[i] = color;
+    this.queueRender();
   }
-  getClick() {
-    return this.clickQueue.shift();
+
+  color = (x, y) =>
+    this.pixmap[y * this.rows + x] || this.defaultBg
+
+  clear = () => {
+    this.pixmap.fill(this.defaultBg)
+    this.clean.fill(false);
+    this.queueRender();
   }
-  text(x, y, text, size = 12, color = "black") {
-    const el = document.createElement('span');
-    el.textContent = text;
-    el.style.position = 'absolute';
-    el.style.fontSize = size;
-    el.style.color = color;
-    el.style.fontFamily = 'monospace';
-    el.style.left = (x / this.rows * 100) + '%';
-    el.style.top = (y / this.columns * 100) + '%';
-    this.grid.parentElement.appendChild(el);
-    this.texts[`${x}:${y}`] = el;
+
+  getChar = () => this.keyQueue.shift();
+  getClick = () => this.clickQueue.shift();
+
+  text = (x, y, text, size = 12, color = "black") => {
+    this.ctx.textAlign = "left";
+    this.ctx.textBaseline = "top"
+    this.ctx.font = `${size}px monospace`;    
+    this.ctx.strokeStyle = color;
+    this.ctx.fillStyle = color;
+    this.ctx.fillText(text, this.dim * x, this.dim * y);    
   }
-  draw(table) {
+
+  draw = table => {
     for (let i in table) {
       for (let j in table[i]) {
         this.plot(i, j, table[i][j]);
