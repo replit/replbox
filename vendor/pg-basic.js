@@ -1298,7 +1298,7 @@ function (_Node23) {
   function PLAY(lineno, note) {
     var _this20;
 
-    var octave = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '2';
+    var octave = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '4';
     var duration = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '1';
 
     _classCallCheck(this, PLAY);

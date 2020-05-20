@@ -1,33 +1,39 @@
-const AudioSynth = require('./audiosynth');
+const notes = { 'C': 261.63, 'C#': 277.18, 'D': 293.66, 'D#': 311.13, 'E': 329.63, 'F': 349.23, 'F#': 369.99, 'G': 392.00, 'G#': 415.30, 'A': 440.00, 'A#': 466.16, 'B': 493.88 };
 
-const synth = new AudioSynth();
-let audio;
 exports.play = (note, octave = 4, duration = 1) => {
+  note = note.toUpperCase();
+  if (!notes[note]) {
+    throw new Error('Invalid note: ' + note);
+  }
+
   if (duration <= 0) return;
-  audio = synth.play(0, note.toUpperCase(), octave, duration);
+
+  exports.sound(notes[note] * Math.pow(2, octave - 4), duration);
 }
 
-const c = new AudioContext();
-const ramp = 0.05;
+const c = new (window.AudioContext || window.webkitAudioContext)();
+const type = 'sine'
 
 exports.sound = (freq, duration = 1) => {
   if (duration <= 0) return;
 
-  duration = duration - ramp;  
+  let offset = c.currentTime + 0;
+  let oscillator = c.createOscillator();
+  let gainNode = c.createGain();
 
-  const osc = c.createOscillator();
-  const gain = c.createGain();
-  osc.connect(gain);
-  gain.connect(c.destination);
-  osc.frequency.value = freq;
-  osc.start()
-  
-  setTimeout(() => {    
-    gain.gain.exponentialRampToValueAtTime(0.00001, c.currentTime + 0.05);
-  }, duration * 1000);
+  oscillator.connect(gainNode);
+  gainNode.connect(c.destination);
+  oscillator.type = type;
+
+  oscillator.frequency.value = freq;
+  gainNode.gain.setValueAtTime(0, offset);
+  gainNode.gain.linearRampToValueAtTime(1, offset + 0.01);
+
+  oscillator.start(offset);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, offset + length);
+  oscillator.stop(offset + length);
 }
 
 exports.close = () => {
   c.close();
-  if (audio) audio.pause();
 };
