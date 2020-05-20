@@ -71,7 +71,7 @@ Messenger.on('evaluate', ({ code }) => {
   // and program is running; janky but no good hooks right now. 
   setTimeout(() => {
     wrapper.focus();
-  }, 50);
+  }, 100);
 
   basic
     .run(code)
