@@ -111,7 +111,7 @@ module.exports = class TableDisplay {
     if (!color) return;
 
     // Add # to hex colors (backwards compat)
-    if (color.match(/[0-9A-Fa-f]{6}/)) {
+    if (color.match(/^[0-9A-Fa-f]{6}$/)) {
       color = '#' + color;
     }
 
