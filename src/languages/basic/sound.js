@@ -11,12 +11,16 @@ exports.play = (note, octave = 4, duration = 1) => {
   exports.sound(notes[note] * Math.pow(2, octave - 4), duration);
 }
 
-const c = new (window.AudioContext || window.webkitAudioContext)();
+let c;
 const type = 'sine'
 
 exports.sound = (freq, duration = 1) => {
   if (duration <= 0) return;
-
+  
+  if (!c) {
+    c = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  
   let offset = c.currentTime + 0;
   let oscillator = c.createOscillator();
   let gainNode = c.createGain();
@@ -35,5 +39,5 @@ exports.sound = (freq, duration = 1) => {
 }
 
 exports.close = () => {
-  c.close();
+  if (c) c.close();
 };
