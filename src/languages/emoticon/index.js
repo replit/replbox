@@ -1,8 +1,5 @@
-const Messenger = require('../../shared/messenger');
-const InputBuffer = require('../../shared/InputBuffer');
-require('script-loader!../../../vendor/emoticon');
-
-const { Emoticon } = Messenger.global;
+const Emoticon = require('../../../vendor/emoticon');
+const interp = require('../../interp');
 
 function result(env) {
   let resultEnv = '';
@@ -17,26 +14,25 @@ function result(env) {
     }
     resultEnv += `\n${listName}: ${listStr}`;
   }
-  Messenger.result({ data: resultEnv });
+  interp.result(resultEnv);
 }
 
-const inputBuffer = new InputBuffer(Messenger);
 const interpreter = new Emoticon.Interpreter({
   source: [],
-  input: inputBuffer.onInput,
-  print: Messenger.output,
+  input: interp.stdin,
+  print: interp.stdout,
   result,
 });
 
-Messenger.on('evaluate', ({ code }) => {
+function evaluate(code) {
   try {
     const parsed = new Emoticon.Parser(code);
     interpreter.lists.Z = interpreter.lists.Z.concat(parsed);
     interpreter.run();
   } catch (e) {
-    Messenger.result({ error: e.message });
+    interp.stderr(e.message);
   }
-});
+}
 
 function countParens(str) {
   const tokens = new Emoticon.Parser(str);
@@ -55,7 +51,7 @@ function countParens(str) {
   return parens;
 }
 
-Messenger.on('checkLine', code => {
+function checkLine(code) {
   const ret = r => Messenger.checkLineEnd(r);
 
   if (countParens(code) <= 0) {
@@ -69,6 +65,9 @@ Messenger.on('checkLine', code => {
   }
 
   return ret(0);
-});
+}
 
-Messenger.ready();
+module.exports = {
+  evaluate,
+  checkLine,
+};
