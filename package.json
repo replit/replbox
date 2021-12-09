@@ -2,11 +2,12 @@
   "name": "@replit/replbox",
   "version": "2.20.0",
   "description": "A sandboxed browser REPL",
+  "bin": "replbox.js",
   "scripts": {
     "prepublishOnly": "yarn build && cp stuffjschild.html dist",
     "clean": "rm -rf ./dist",
     "prettier": "prettier --write \"src/**/*.js\"",
-    "run": "node index.js",
+    "replbox": "node replbox.js"
   },
   "author": "amjad@repl.it",
   "license": "UNLICENSED",

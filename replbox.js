@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const lang = process.argv[2]
 const { evaluate } = require(`./src/languages/${lang}`);
 const prompt = require('prompt-sync')({sigint: true});
