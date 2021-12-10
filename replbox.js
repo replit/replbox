@@ -6,6 +6,7 @@ const { ArgumentParser } = require('argparse');
 
 const { prompt } = require('./src/prompt.js');
 const asyncPrompt = util.promisify(prompt);
+const { stderr } = require('./src/interp.js');
 
 const parser = new ArgumentParser({
     description: 'Replbox is a single frontend to several language interpreters',
@@ -30,7 +31,15 @@ console.log(header);
     const fs = require('fs');
     try {
       const content = fs.readFileSync(args.file, { encoding:'utf8', flag:'r' })
-      await asyncEval(content)
+
+      try {
+        const result = await asyncEval(content)
+        if (result !== undefined) {
+          console.log(`${args.result}${result}\x1b[0m`)
+        }
+      } catch (e) {
+        stderr(e)
+      }
 
       if (!args.i) {
         process.exit(0)
@@ -44,9 +53,13 @@ console.log(header);
   while (1) {
     const code = await asyncPrompt(args.ps1);
     process.stdout.write("\x1b[0m")
-    const result = await asyncEval(code)
-    if (result) {
-      console.log(`${args.result}${result}\x1b[0m`)
+    try {
+      const result = await asyncEval(code)
+      if (result !== undefined) {
+        console.log(`${args.result}${result}\x1b[0m`)
+      }
+    } catch (e) {
+      stderr(e)
     }
   }
 })()
