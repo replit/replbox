@@ -15,6 +15,7 @@
     "prettier": "^1.18.2"
   },
   "dependencies": {
+    "argparse": "^2.0.1",
     "underscore": "1.2.2"
   },
   "prettier": {

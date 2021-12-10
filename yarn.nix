@@ -2,6 +2,14 @@
   offline_cache = linkFarm "offline" packages;
   packages = [
     {
+      name = "argparse___argparse_2.0.1.tgz";
+      path = fetchurl {
+        name = "argparse___argparse_2.0.1.tgz";
+        url  = "https://registry.yarnpkg.com/argparse/-/argparse-2.0.1.tgz";
+        sha1 = "246f50f3ca78a3240f6c997e8a9bd1eac49e4b38";
+      };
+    }
+    {
       name = "prettier___prettier_1.19.1.tgz";
       path = fetchurl {
         name = "prettier___prettier_1.19.1.tgz";

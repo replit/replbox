@@ -1,12 +1,52 @@
 #!/usr/bin/env node
-const lang = process.argv[2]
-const { evaluate } = require(`./src/languages/${lang}`);
-const prompt = require('prompt-sync')({sigint: true});
+
+const util = require('util')
+
+const { ArgumentParser } = require('argparse');
+
+const { prompt } = require('./src/prompt.js');
+const asyncPrompt = util.promisify(prompt);
+
+const parser = new ArgumentParser({
+    description: 'Replbox is a single frontend to several language interpreters',
+    add_help: true,
+});
+
+parser.add_argument('-v', '--version', { action: 'version', version: '0.0.1' });
+parser.add_argument('--ps1', { help: 'The prompt to display', default: "\x1b[0;33m > "})
+parser.add_argument('--result', { help: 'The prompt to display with results', default: "\x1b[0;32m=> "});
+parser.add_argument('-i', { help: 'Drop to an interpreter after interpreting files', action: 'store_true'} )
+parser.add_argument('lang', { help: 'The language to interpret', choices: ['qbasic', 'roy', 'emoticon', 'bloop'] });
+parser.add_argument('file', { help: 'A file to pass to the interpreter', nargs: '?' });
+
+const args = parser.parse_args();
+
+const { header, evaluate } = require(`./src/languages/${args.lang}`);
+const asyncEval = util.promisify(evaluate);
+console.log(header);
 
 (async ()=>{
-  console.log(lang)
+  if (args.file) {
+    const fs = require('fs');
+    try {
+      const content = fs.readFileSync(args.file, { encoding:'utf8', flag:'r' })
+      await asyncEval(content)
+
+      if (!args.i) {
+        process.exit(0)
+      }
+    } catch (e) {
+      console.error(`Failed to open ${args.file}: ${e.message}`)
+      process.exit(1)
+    }
+  }
+
   while (1) {
-    const code = await prompt("\x1b[0;33m > ")
-    evaluate(code)
+    const code = await asyncPrompt(args.ps1);
+    process.stdout.write("\x1b[0m")
+    const result = await asyncEval(code)
+    if (result) {
+      console.log(`${args.result}${result}\x1b[0m`)
+    }
   }
 })()
