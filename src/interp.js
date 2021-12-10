@@ -1,10 +1,14 @@
-function stdin(args) {
-  console.log("asking for stdin", args)
+const { prompt } = require('./prompt.js')
+
+function stdin(callback) {
+  prompt('', (err, text) => {
+    callback(text);
+  })
 }
 
 function stdout(args) {
   if (args) {
-    console.log(`${args}`)
+    process.stdout.write(`${args}`)
   }
 }
 
@@ -23,5 +27,6 @@ function result(args) {
 module.exports = {
   stdout,
   stderr,
+  stdin,
   result,
 }

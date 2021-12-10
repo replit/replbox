@@ -15,8 +15,7 @@
     "prettier": "^1.18.2"
   },
   "dependencies": {
-    "underscore": "1.2.2",
-    "prompt-sync": "^4.2.0"
+    "underscore": "1.2.2"
   },
   "prettier": {
     "trailingComma": "all",
