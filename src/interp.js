@@ -18,15 +18,8 @@ function stderr(args) {
   }
 }
 
-function result(args) {
-  if (args) {
-    console.log(`\x1b[0;32m=> ${args}\x1b[0m`)
-  }
-}
-
 module.exports = {
   stdout,
   stderr,
   stdin,
-  result,
 }

@@ -5,23 +5,19 @@ const virtual_machine = new QBasic.VirtualMachine({
   print: interp.stdout,
   // remove the ending \n
   input: interp.stdin,
-  result: interp.result,
   error: interp.stderr,
 });
 
-function evaluate(code) {
-  try {
-    return virtual_machine.run(code, () => {
-      if (virtual_machine.stack.length) {
-        return virtual_machine.cons.result(
-          virtual_machine.stack.pop().toString(),
-        );
-      }
-      return virtual_machine.cons.result('');
-    });
-  } catch (e) {
-    return virtual_machine.cons.error(e.message);
-  }
+const header = `QBasic (qb.js)
+Copyright (c) 2010 Steve Hanov`
+
+function evaluate(code, callback) {
+  return virtual_machine.run(code, () => {
+    if (virtual_machine.stack.length) {
+      return callback(null, virtual_machine.stack.pop().toString());
+    }
+    return callback(null, undefined);
+  });
 }
 
 function checkLine(command) {
@@ -151,6 +147,7 @@ function checkLine(command) {
 }
 
 module.exports = {
+  header,
   evaluate,
   checkLine,
 }

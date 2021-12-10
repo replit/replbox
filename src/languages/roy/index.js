@@ -1,19 +1,22 @@
 const { roy } = require('../../../vendor/roy');
 const interp = require('../../interp');
 
-function evaluate(code) {
+const header = `Roy 0.1.3
+Copyright (C) 2011 Brian McKenna`
+
+function evaluate(code, callback) {
   let compiled;
   try {
     compiled = roy.compile(code).output;
   } catch (e) {
-    interp.stderr(e.stack)
-    return;
+    callback(e.stack, null);
+    return
   }
 
   try {
-    eval(compiled)
+    callback(null, eval(compiled))
   } catch (e) {
-    interp.stderr(e.message)
+    callback(e.message, null);
   }
 }
 
@@ -31,6 +34,7 @@ function checkLine(command) {
 }
 
 module.exports = {
+  header,
   evaluate,
   checkLine,
 };

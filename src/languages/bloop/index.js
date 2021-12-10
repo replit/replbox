@@ -3,13 +3,17 @@ const interp = require('../../interp');
 
 BFloop.init(interp.stdout);
 
-function evaluate(code) {
+const header = `BlooPjs
+Copyright (c) 2005 Tim Cameron Ryan
+Based on Perl code by John Cowan, 1994`
+
+function evaluate(code, callback) {
   try {
     const compiledCode = BFloop.compile(code);
     const result = eval(compiledCode);
-    interp.result(result)
+    callback(null, result)
   } catch (e) {
-    interp.stderr(e.message)
+    callback(e.message, null)
   }
 };
 
@@ -38,6 +42,7 @@ function checkLine(command) {
 }
 
 module.exports = {
+  header,
   evaluate,
   checkLine,
 }
