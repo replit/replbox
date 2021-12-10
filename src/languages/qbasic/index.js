@@ -9,7 +9,7 @@ const virtual_machine = new QBasic.VirtualMachine({
 });
 
 const header = `QBasic (qb.js)
-Copyright (c) 2010 Steve Hanov`
+Copyright (c) 2010 Steve Hanov`;
 
 function evaluate(code, callback) {
   return virtual_machine.run(code, () => {
@@ -72,10 +72,7 @@ function checkLine(command) {
         continue;
       }
       firstToken = token.text;
-      token = tokenizer.nextToken(
-        0,
-        token.locus.position + token.text.length,
-      );
+      token = tokenizer.nextToken(0, token.locus.position + token.text.length);
       if (!token) {
         continue;
       }
@@ -150,4 +147,4 @@ module.exports = {
   header,
   evaluate,
   checkLine,
-}
+};

@@ -5,20 +5,20 @@ BFloop.init(interp.stdout);
 
 const header = `BlooPjs
 Copyright (c) 2005 Tim Cameron Ryan
-Based on Perl code by John Cowan, 1994`
+Based on Perl code by John Cowan, 1994`;
 
 function evaluate(code, callback) {
   try {
     const compiledCode = BFloop.compile(code);
     const result = eval(compiledCode);
-    callback(null, result)
+    callback(null, result);
   } catch (e) {
-    callback(e.message, null)
+    callback(e.message, null);
   }
-};
+}
 
 function checkLine(command) {
-  console.log("Checkline ", command)
+  console.log('Checkline ', command);
   const rOpen = /BLOCK\s+(\d+)\s*:\s*BEGIN/gi;
   const rClose = /BLOCK\s+(\d+)\s*:\s*END/gi;
 
@@ -45,4 +45,4 @@ module.exports = {
   header,
   evaluate,
   checkLine,
-}
+};

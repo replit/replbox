@@ -2,7 +2,7 @@ const { roy } = require('../../../vendor/roy');
 const interp = require('../../interp');
 
 const header = `Roy 0.1.3
-Copyright (C) 2011 Brian McKenna`
+Copyright (C) 2011 Brian McKenna`;
 
 function evaluate(code, callback) {
   let compiled;
@@ -10,11 +10,11 @@ function evaluate(code, callback) {
     compiled = roy.compile(code).output;
   } catch (e) {
     callback(e.stack, null);
-    return
+    return;
   }
 
   try {
-    callback(null, eval(compiled))
+    callback(null, eval(compiled));
   } catch (e) {
     callback(e.message, null);
   }
@@ -23,13 +23,13 @@ function evaluate(code, callback) {
 function checkLine(command) {
   try {
     roy.compile(command);
-    return false
+    return false;
   } catch (e) {
     if (/[[{(]$/.test(command)) {
       // An opening brace, bracket or paren; indent.
-      return 1
+      return 1;
     }
-    return 0
+    return 0;
   }
 }
 

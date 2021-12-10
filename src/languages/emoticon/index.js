@@ -2,7 +2,7 @@ const Emoticon = require('../../../vendor/emoticon');
 const interp = require('../../interp');
 
 const header = `Emoticon v1.5 (emoticoffee)
-Copyright (c) 2011 Amjad Masad`
+Copyright (c) 2011 Amjad Masad`;
 
 const interpreter = new Emoticon.Interpreter({
   source: [],
@@ -11,7 +11,7 @@ const interpreter = new Emoticon.Interpreter({
 });
 
 function evaluate(code, callback) {
-  interpreter.result = (env) => {
+  interpreter.result = env => {
     let resultEnv = '';
     for (const listName in env) {
       const list = env[listName];
@@ -25,14 +25,14 @@ function evaluate(code, callback) {
       resultEnv += `\n${listName}: ${listStr}`;
     }
     callback(null, resultEnv);
-  }
+  };
 
   try {
     const parsed = new Emoticon.Parser(code);
     interpreter.lists.Z = interpreter.lists.Z.concat(parsed);
     interpreter.run();
   } catch (e) {
-    callback(e.message, null)
+    callback(e.message, null);
   }
 }
 
