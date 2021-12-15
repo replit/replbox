@@ -13,8 +13,13 @@ const parser = new ArgumentParser({
     add_help: true,
 });
 
+let defaultPrompt = process.env['PS1'];
+if (defaultPrompt === undefined) {
+  defaultPrompt = "\x1b[0;33m > ";
+}
+
 parser.add_argument('-v', '--version', { action: 'version', version: '0.0.1' });
-parser.add_argument('--ps1', { help: 'The prompt to display', default: "\x1b[0;33m > "})
+parser.add_argument('--ps1', { help: 'The prompt to display', default: defaultPrompt})
 parser.add_argument('--result', { help: 'The prompt to display with results', default: "\x1b[0;32m=> "});
 parser.add_argument('-i', { help: 'Drop to an interpreter after interpreting files', action: 'store_true'} )
 parser.add_argument('lang', { help: 'The language to interpret', choices: ['qbasic', 'roy', 'emoticon', 'bloop'] });
