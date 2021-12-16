@@ -22,7 +22,7 @@ parser.add_argument('-v', '--version', { action: 'version', version: '3.0.0' });
 parser.add_argument('--ps1', { help: 'The prompt to display', default: defaultPrompt})
 parser.add_argument('--result', { help: 'The prompt to display with results', default: "\x1b[0;32m=> "});
 parser.add_argument('-i', { help: 'Drop to an interpreter after interpreting files', action: 'store_true'} )
-parser.add_argument('lang', { help: 'The language to interpret', choices: ['qbasic', 'roy', 'emoticon', 'bloop', 'scheme'] });
+parser.add_argument('lang', { help: 'The language to interpret', choices: ['qbasic', 'roy', 'emoticon', 'bloop', 'unlambda', 'scheme'] });
 parser.add_argument('file', { help: 'A file to pass to the interpreter', nargs: '?' });
 
 const args = parser.parse_args();

@@ -1,29 +1,30 @@
 const { Unlambda } = require('../../../vendor/unlambda');
-const Messenger = require('../../shared/messenger');
-const InputBuffer = require('../../shared/InputBuffer');
+const interp = require('../../interp');
 
-const inputBuffer = new InputBuffer(Messenger);
+const header = `Unlambda v2.0 (unlambda-coffee)
+Copyright (c) 2011 Max Shawabkeh`;
 
-Messenger.on('evaluate', ({ code }) => {
+function evaluate(code, callback) {
   let parsed;
   try {
     parsed = Unlambda.parse(code);
   } catch (e) {
-    Messenger.result({ error: e.message });
+    callback(e.message, null);
     return;
   }
 
   Unlambda.eval(
     parsed,
-    data => Messenger.result({ data }),
-    inputBuffer.onInput,
-    Messenger.output,
-    error => Messenger.result({ error }),
+    data => callback(null, data),
+    interp.stdin,
+    interp.stdout,
+    interp.stderr,
   );
-});
+}
 
-Messenger.on('checkLine', command => {
+function checkLine(command) {
   if (/`$/.test(command)) {
+    return 0;
     return Messenger.checkLineEnd(0);
   }
 
@@ -36,6 +37,10 @@ Messenger.on('checkLine', command => {
 
   // ¯\_(ツ)_/¯
   return undefined;
-});
+}
 
-Messenger.ready();
+module.exports = {
+  header,
+  evaluate,
+  checkLine,
+};
