@@ -1,34 +1,40 @@
-require('script-loader!../../../vendor/roy');
-const webEvaluator = require('../../shared/webEvaluator');
-const Messenger = require('../../shared/messenger');
+const { roy } = require('../../../vendor/roy');
+const interp = require('../../interp');
 
-const { roy } = Messenger.global;
+const header = `Roy 0.1.3
+Copyright (C) 2011 Brian McKenna`;
 
-// WebEvaluator calls ready.
-const evaluate = webEvaluator();
-
-Messenger.on('evaluate', ({ code, infiniteLoopProtection }) => {
+function evaluate(code, callback) {
   let compiled;
   try {
     compiled = roy.compile(code).output;
   } catch (e) {
-    Messenger.result({ error: e.stack });
+    callback(e.stack, null);
     return;
   }
 
-  // WebEvaluator takes care of returning the result.
-  evaluate(compiled, { infiniteLoopProtection });
-});
+  try {
+    callback(null, eval(compiled));
+  } catch (e) {
+    callback(e.message, null);
+  }
+}
 
-Messenger.on('checkLine', command => {
+function checkLine(command) {
   try {
     roy.compile(command);
-    return Messenger.checkLineEnd(false);
+    return false;
   } catch (e) {
     if (/[[{(]$/.test(command)) {
       // An opening brace, bracket or paren; indent.
-      return Messenger.checkLineEnd(1);
+      return 1;
     }
-    return Messenger.checkLineEnd(0);
+    return 0;
   }
-});
+}
+
+module.exports = {
+  header,
+  evaluate,
+  checkLine,
+};

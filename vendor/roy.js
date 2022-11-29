@@ -1,3 +1,4 @@
+const _ = require('underscore');
 var roy = {};
 
 //     Underscore.js 1.2.3
@@ -3490,3 +3491,7 @@ var roy = {};
   roy.lexer = require("./lexer");
   roy.compile = require("./compile").compile;
 })();
+
+module.exports = {
+  roy,
+}

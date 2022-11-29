@@ -1,42 +1,40 @@
-const Messenger = require('../../shared/messenger');
-const InputBuffer = require('../../shared/InputBuffer');
-require('script-loader!../../../vendor/emoticon');
+const Emoticon = require('../../../vendor/emoticon');
+const interp = require('../../interp');
 
-const { Emoticon } = Messenger.global;
+const header = `Emoticon v1.5 (emoticoffee)
+Copyright (c) 2011 Amjad Masad`;
 
-function result(env) {
-  let resultEnv = '';
-  for (const listName in env) {
-    const list = env[listName];
-    let listStr = list.toString();
-    let len = listStr.length - 74;
-    len = len > 0 ? len : 0;
-    listStr = listStr.slice(len);
-    if (len > 0) {
-      listStr = `...${listStr}`;
-    }
-    resultEnv += `\n${listName}: ${listStr}`;
-  }
-  Messenger.result({ data: resultEnv });
-}
-
-const inputBuffer = new InputBuffer(Messenger);
 const interpreter = new Emoticon.Interpreter({
   source: [],
-  input: inputBuffer.onInput,
-  print: Messenger.output,
-  result,
+  input: interp.stdin,
+  print: interp.stdout,
 });
 
-Messenger.on('evaluate', ({ code }) => {
+function evaluate(code, callback) {
+  interpreter.result = env => {
+    let resultEnv = '';
+    for (const listName in env) {
+      const list = env[listName];
+      let listStr = list.toString();
+      let len = listStr.length - 74;
+      len = len > 0 ? len : 0;
+      listStr = listStr.slice(len);
+      if (len > 0) {
+        listStr = `...${listStr}`;
+      }
+      resultEnv += `\n${listName}: ${listStr}`;
+    }
+    callback(null, resultEnv);
+  };
+
   try {
     const parsed = new Emoticon.Parser(code);
     interpreter.lists.Z = interpreter.lists.Z.concat(parsed);
     interpreter.run();
   } catch (e) {
-    Messenger.result({ error: e.message });
+    callback(e.message, null);
   }
-});
+}
 
 function countParens(str) {
   const tokens = new Emoticon.Parser(str);
@@ -55,7 +53,7 @@ function countParens(str) {
   return parens;
 }
 
-Messenger.on('checkLine', code => {
+function checkLine(code) {
   const ret = r => Messenger.checkLineEnd(r);
 
   if (countParens(code) <= 0) {
@@ -69,6 +67,10 @@ Messenger.on('checkLine', code => {
   }
 
   return ret(0);
-});
+}
 
-Messenger.ready();
+module.exports = {
+  header,
+  evaluate,
+  checkLine,
+};

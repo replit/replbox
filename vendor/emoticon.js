@@ -530,7 +530,7 @@ Interpreter = (function() {
 
 })();
 
-window.Emoticon = {
+module.exports = {
   Parser: Parser,
   Interpreter: Interpreter
 };

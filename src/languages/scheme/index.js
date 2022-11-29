@@ -1,56 +1,20 @@
-require('script-loader!biwascheme/src/version.js');
+const BiwaScheme = require('biwascheme');
 
-// This is a dependency of the biwascheme but we install them as a direct
-// dependency for reliability and convenience.
-require('script-loader!underscore');
-require('script-loader!underscore.string');
+const interp = require('../../interp');
 
-require('script-loader!biwascheme/src/header.js');
-require('script-loader!biwascheme/src/system/class.js');
-require('script-loader!biwascheme/src/system/_writer.js');
-require('script-loader!biwascheme/src/system/_types.js');
-require('script-loader!biwascheme/src/system/error.js');
-require('script-loader!biwascheme/src/system/set.js');
-require('script-loader!biwascheme/src/system/values.js');
-require('script-loader!biwascheme/src/system/pair.js');
-require('script-loader!biwascheme/src/system/symbol.js');
-require('script-loader!biwascheme/src/system/char.js');
-require('script-loader!biwascheme/src/system/number.js');
-require('script-loader!biwascheme/src/system/port.js');
-require('script-loader!biwascheme/src/system/record.js');
-require('script-loader!biwascheme/src/system/enumeration.js');
-require('script-loader!biwascheme/src/system/hashtable.js');
-require('script-loader!biwascheme/src/system/syntax.js');
-require('script-loader!biwascheme/src/system/parser.js');
-require('script-loader!biwascheme/src/system/compiler.js');
-require('script-loader!biwascheme/src/system/pause.js');
-require('script-loader!biwascheme/src/system/call.js');
-require('script-loader!biwascheme/src/system/interpreter.js');
-require('script-loader!biwascheme/src/library/infra.js');
-require('script-loader!biwascheme/src/library/r6rs_lib.js');
-require('script-loader!biwascheme/src/library/js_interface.js');
-require('script-loader!biwascheme/src/library/webscheme_lib.js');
-require('script-loader!biwascheme/src/library/extra_lib.js');
-require('script-loader!biwascheme/src/library/node_functions.js');
-require('script-loader!biwascheme/src/library/srfi.js');
-require('script-loader!biwascheme/src/platforms/browser/dumper.js');
-require('script-loader!biwascheme/src/platforms/browser/console.js');
-const Messenger = require('../../shared/messenger');
-const InputBuffer = require('../../shared/InputBuffer');
-
-const inputBuffer = new InputBuffer(Messenger);
-const { BiwaScheme } = Messenger.global;
 const Port = BiwaScheme.Port;
 
-Port.current_input = new Port.CustomInput(inputBuffer.onInput);
-Port.current_output = new Port.CustomOutput(Messenger.output);
-Port.current_error = Port.current_output;
-const interpreter = new BiwaScheme.Interpreter(error =>
-  Messenger.result({ error: error.message }),
-);
+Port.current_input = new Port.CustomInput(interp.stdin);
+Port.current_output = new Port.CustomOutput(interp.stdout);
+Port.current_error = new Port.CustomOutput(interp.stderr);
+const interpreter = new BiwaScheme.Interpreter();
 
-Messenger.on('evaluate', ({ code }) => {
+const header = `BiwaScheme Interpreter version 0.6.4
+Copyright (C) 2007-2014 Yutaka HARA and the BiwaScheme team`;
+
+function evaluate(code, callback) {
   try {
+    interpreter.on_error = error => callback(error.message, null);
     interpreter.evaluate(code, newState => {
       // When the result is JS undefined then this eval was an error and the
       // error callback has been already called.
@@ -62,15 +26,15 @@ Messenger.on('evaluate', ({ code }) => {
           result = BiwaScheme.to_write(newState);
         }
 
-        Messenger.result({ data: result });
+        callback(null, result);
       }
     });
   } catch (e) {
-    interpreter.on_error(e.message);
+    callback(e.message, null);
   }
-});
+}
 
-Messenger.on('checkLine', command => {
+function checkLine(command) {
   function countParens(str) {
     const { tokens } = new BiwaScheme.Parser(str);
     let parens = 0;
@@ -91,18 +55,22 @@ Messenger.on('checkLine', command => {
 
   if (countParens(command) <= 0) {
     // All S-exps closed or extra closing parens; don't continue.
-    return Messenger.checkLineEnd(false);
+    return false;
   }
 
   const parensLastLine = countParens(command.split('\n').pop());
   if (parensLastLine > 0) {
     // A new S-exp opened on the last line; indent one level.
-    return Messenger.checkLineEnd(1);
+    return 1;
   } else if (parensLastLine < 0) {
     // Some S-exps were closed; realign with the outermost closed S-exp.
-    return Messenger.checkLineEnd(parensLastLine);
+    return parensLastLine;
   }
-  return Messenger.checkLineEnd(0);
-});
+  return 0;
+}
 
-Messenger.ready();
+module.exports = {
+  header,
+  evaluate,
+  checkLine,
+};
