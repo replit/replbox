@@ -9,7 +9,7 @@ Port.current_output = new Port.CustomOutput(interp.stdout);
 Port.current_error = new Port.CustomOutput(interp.stderr);
 const interpreter = new BiwaScheme.Interpreter();
 
-const header = `BiwaScheme Interpreter version 0.6.4
+const header = `BiwaScheme Interpreter version ${BiwaScheme.VERSION}
 Copyright (C) 2007-2014 Yutaka HARA and the BiwaScheme team`;
 
 function evaluate(code, callback) {
